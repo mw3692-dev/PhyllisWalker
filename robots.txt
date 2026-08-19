@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://phylliswalker.jhilburn.com/sitemap.xml
+Sitemap: https://mw3692-dev.github.io/PhyllisWalker/sitemap.xml

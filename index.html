@@ -50,9 +50,62 @@
     ]
   }
   </script>
+</head>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "OfferCatalog",
+        "name": "Services Offered by Phyllis Walker",
+        "itemListElement": [
+          {"@type":"Offer","itemOffered":{"@type":"Service","name":"Custom Suits","description":"Made-to-measure suits with expert fittings and fabric selection."}},
+          {"@type":"Offer","itemOffered":{"@type":"Service","name":"Custom Shirts","description":"Bespoke shirts tailored to your measurements and style preferences."}},
+          {"@type":"Offer","itemOffered":{"@type":"Service","name":"Made-to-Measure Denim","description":"Tailored denim and pants for a precise fit."}},
+          {"@type":"Offer","itemOffered":{"@type":"Service","name":"Steaming & Pressing (Suits & Tuxedos)","description":"Professional steaming, pressing, and final finishing for suits and tuxedos to ensure a crisp, camera-ready look."}},
+          {"@type":"Offer","itemOffered":{"@type":"Service","name":"Tuxedo Fittings & Styling","description":"Tuxedo measurements, styling, and final fittings for events and weddings."}}
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Where is Phyllis Walker located?",
+            "acceptedAnswer": {"@type":"Answer","text":"Phyllis Walker is located at The Star in Frisco, the Dallas Cowboys entertainment district, and serves Frisco, Plano, Allen, McKinney, Carrollton, Prosper, The Colony and Little Elm."}
+          },
+          {
+            "@type": "Question",
+            "name": "Do you offer tuxedo fittings and steaming services?",
+            "acceptedAnswer": {"@type":"Answer","text":"Yes — tuxedo fittings, steaming, and professional pressing are available to ensure event-ready garments."}
+          },
+          {
+            "@type": "Question",
+            "name": "How do I book a fitting?",
+            "acceptedAnswer": {"@type":"Answer","text":"Contact via email phyllis.walker@jhilburnpartner.com to schedule a private fitting or consultation at The Star."}
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
 </head>
+</head>
 <body>
+  <script>
+  (function(){
+    try{
+      var ua = navigator.userAgent || '';
+      var botPatterns = /bot|crawl|slurp|spider|bingpreview|facebookexternalhit|googlebot|mediapartners-google|adsbot/i;
+      if(botPatterns.test(ua)) return; // allow most bots to index content
+      // For human visitors, present a redirect notice and forward to the official site
+      var official = 'https://phylliswalker.jhilburn.com/';
+      document.documentElement.innerHTML = '\n        <body style="font-family:system-ui,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">\n          <div style="text-align:center;max-width:560px;padding:20px;">\n            <h2>You are being redirected</h2>\n            <p>This site is a technical replica used for indexing. Please visit the official public site for Phyllis Walker.</p>\n            <p><a href="'+official+'">Open phylliswalker.jhilburn.com</a></p>\n          </div>\n        </body>\n      ';
+      setTimeout(function(){ window.location.href = official; }, 1200);
+    } catch(e){}
+  })();
+  </script>
   <header class="site-header">
     <div class="container nav-row">
       <div class="brand"><img class="brand-logo" src="assets/logo.svg" alt="J. Hilburn">J. HILBURN</div>
