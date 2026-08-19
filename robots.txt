@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://phylliswalker.jhilburn.com/sitemap.xml
