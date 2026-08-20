@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client → RT → Hours Drill-down</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Pinned deliberately: chartjs-chart-treemap 2.x only works with Chart.js 3.x.
+     Loading unversioned chart.js (which resolves to the current 4.x) alongside
+     treemap@2 renders tiles but silently breaks click/event handling. 4.4.4 + 3.1.0
+     is a known-compatible pair, used here for the treemap only. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js"></script>
+<!-- Sankey uses D3 + d3-sankey, not Google Charts (which was tried first and
+     doesn't actually work here: it needs an internal iframe to load, and
+     browsers treat every file:// page as its own unique, isolated security
+     origin, so that iframe gets silently blocked whenever this page is opened
+     by double-clicking it rather than served over http(s). D3 renders pure SVG
+     with no iframe involved, so it works the same way the rest of this project
+     does - just open the file. -->
+<!-- Unversioned dist path deliberately avoided here: an explicit /dist/*.min.js
+     guess is one more thing that can be wrong (a 404 here fails silently - no
+     JS error, d3/d3.sankey just stay undefined). Letting jsdelivr resolve the
+     package's own declared entry point is more robust than guessing filenames.
+     onerror sets a flag checked at page load, so a failed load shows an
+     immediate on-page banner instead of a silent blank panel. -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7" onerror="window.__scriptLoadFailed='D3 (d3@7)'"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3" onerror="window.__scriptLoadFailed='d3-sankey'"></script>
+<style>
+  body { background-color: #f8fafc; }
+  .chart-box { position: relative; height: 460px; width: 100%; }
+  .sankey-box { position: relative; height: 520px; width: 100%; }
+  .heat-cell { width: 14px; height: 14px; border-radius: 2px; display: inline-block; margin: 1px; }
+  .heat-cell-missed { box-shadow: 0 0 0 2px #dc2626 inset; }
+  #rtTooltip { position: fixed; z-index: 60; pointer-events: none; max-width: 340px; }
+</style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen pb-16">
+
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-blue-600 p-2 rounded-lg text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"></path></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Client → Active RTs → Hours &amp; $ Drill-down</h1>
+        <p class="text-sm text-slate-500">Click a client tile in the treemap to see its RT breakdown below, as either a Roster Summary or an Hours &amp; Billing Detail view.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+  <div id="globalError" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3"></div>
+
+  <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
+    <strong>Note on the $ figures:</strong> invoices are billed at the client level, not per RT, so there is
+    no real per-RT dollar amount in the source data. "Est. Revenue" and "Est. Cost" are estimates only:
+    <code>hours worked × Billed Rate</code> (source field: <code>Partner Rate</code> - the rate actually
+    billed to the client) and <code>hours worked × RS Current Rate</code> (source field:
+    <code>Current Rate with Client</code> - RS's internal cost rate for the RT, falling back to RS Base
+    Rate when unset). RTs on a Fixed Rate billing arrangement (flat monthly fee, not hourly) are excluded
+    from Est. Revenue for now; RTs with no Billed Rate on file show "—" instead of a misleading $0.
+  </div>
+
+  <!-- Global controls -->
+  <div class="flex flex-wrap items-center gap-4 bg-white rounded-xl border border-slate-200 p-3">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-medium text-slate-600">Group by:</span>
+      <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <button id="btn-industry" onclick="setGrouping('industry')" class="group-btn px-4 py-1.5 rounded-md text-sm font-medium bg-white shadow-sm text-blue-600">Business Industry</button>
+        <button id="btn-family" onclick="setGrouping('family')" class="group-btn px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800" title="Only clients that are part of a multi-entity parent/child company group">Parent Company</button>
+        <button id="btn-tier" onclick="setGrouping('tier')" class="group-btn px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800" title="Same mechanism as Industry, works today - just not the focus yet">Client Tier</button>
+      </div>
+    </div>
+    <div class="relative flex items-center gap-2">
+      <span class="text-sm font-medium text-slate-600">Find a client:</span>
+      <input type="text" id="clientSearchInput" placeholder="Type a client name…"
+             class="border border-slate-300 rounded px-3 py-1.5 text-sm w-64"
+             oninput="onClientSearchInput()" onkeydown="onClientSearchKeydown(event)"
+             autocomplete="off">
+      <div id="clientSearchResults" class="hidden absolute top-full left-16 mt-1 w-96 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- Treemap view -->
+  <div id="treemapView" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+    <p id="treemapHint" class="text-xs text-slate-400 mb-2">Tile size = active RT headcount. Click a client tile to see its RT breakdown below.</p>
+    <div id="treemapError" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 mb-3"></div>
+    <div class="chart-box"><canvas id="treemapChart"></canvas></div>
+  </div>
+
+  <!-- Sankey view: plotted below the treemap (which stays visible), scoped to
+       whichever client tile was last clicked. Two tabs share this one client's
+       Roles/RTs breakdown: Roster Summary (headcount, no dates, basic RT info)
+       and Hours & Billing Detail (hours-weighted, date-ranged, full RT info). -->
+  <div id="sankeyView" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hidden">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="font-semibold text-slate-700">
+        <span id="sankeyClientLabel"></span> → Roles / RTs
+      </h2>
+      <button onclick="closeSankey()" class="text-slate-400 hover:text-slate-600 text-sm">✕ close</button>
+    </div>
+
+    <!-- Client identity/context - set once per client selection, doesn't
+         change with tab or date filter. -->
+    <div id="clientInfo" class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-600 mb-3"></div>
+
+    <!-- Actual invoiced revenue, from Invoices.csv - a real number, not the
+         hours x rate estimate used elsewhere on this page. Roster Summary
+         shows all invoices on file for this client; Hours & Billing Detail
+         narrows to the same From/To range as the RT hours (see
+         updateInvoiceSummary()). -->
+    <div id="invoiceSummary" class="grid grid-cols-3 gap-2 mb-3"></div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+      <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <button id="tab-summary" onclick="setSankeyTab('summary')" class="px-4 py-1.5 rounded-md text-sm font-medium bg-white shadow-sm text-blue-600">Roster Summary</button>
+        <button id="tab-detail" onclick="setSankeyTab('detail')" class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800">Hours &amp; Billing Detail</button>
+      </div>
+      <div id="sankeyDateControls" class="hidden items-center gap-2 text-sm">
+        <span class="text-slate-500">Flow widths &amp; hover details for:</span>
+        <label class="text-slate-500">From</label>
+        <input type="date" id="dateFrom" class="border border-slate-300 rounded px-2 py-1">
+        <label class="text-slate-500">To</label>
+        <input type="date" id="dateTo" class="border border-slate-300 rounded px-2 py-1">
+        <button onclick="applyGlobalDateFilter()" class="bg-blue-600 text-white rounded px-3 py-1.5 text-sm font-medium hover:bg-blue-700">Apply</button>
+        <button onclick="resetGlobalDateFilter()" class="text-slate-500 text-sm hover:text-slate-700">Reset (full 15 days)</button>
+      </div>
+    </div>
+    <p id="sankeyHint" class="text-slate-400 font-normal text-sm mb-2"></p>
+
+    <div id="sankeyError" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 mb-3"></div>
+    <div id="sankeyInfo" class="hidden text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3"></div>
+    <div class="sankey-box"><div id="sankeyChartDiv" style="width:100%;height:100%;"></div></div>
+  </div>
+
+</main>
+
+<!-- Custom hover tooltip for RT nodes -->
+<div id="rtTooltip" class="hidden bg-slate-900 text-white text-xs rounded-lg shadow-xl p-3">
+  <div id="rtTooltipBody"></div>
+</div>
+
+<script src="assets/drilldown_data.js"></script>
+<script>
+Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+
+// Catches script-tag load failures (e.g. a bad CDN URL) immediately at page
+// load, rather than only surfacing as a confusing blank panel the first time
+// something tries to use the missing library. Also catches any other uncaught
+// error globally, since several bugs in this file so far have failed
+// completely silently otherwise.
+function showGlobalError(msg) {
+  const box = document.getElementById('globalError');
+  box.textContent = msg;
+  box.classList.remove('hidden');
+  console.error('[global error]', msg);
+}
+if (window.__scriptLoadFailed) {
+  showGlobalError(`${window.__scriptLoadFailed} failed to load from its CDN - the Sankey diagram cannot work until this loads. Check your internet connection and reload the page. If it keeps failing, the CDN URL itself may be wrong (see the <head> section).`);
+}
+window.addEventListener('error', (e) => {
+  showGlobalError('An unexpected error occurred: ' + e.message + ' (full details in the browser console, F12).');
+});
+
+const FULL_MIN_DATE = '2026-07-26';
+const FULL_MAX_DATE = '2026-08-10';
+const ROLE_SKIP_RATIO = 0.7; // if distinct roles / RT count >= this, roles don't add grouping value - skip straight to RTs
+
+const INDUSTRY_PALETTE = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#4f46e5','#ea580c','#0d9488','#a855f7'];
+function colorFor(label) {
+  let h = 0;
+  for (let i = 0; i < String(label).length; i++) h = (h * 31 + label.charCodeAt(i)) >>> 0;
+  return INDUSTRY_PALETTE[h % INDUSTRY_PALETTE.length];
+}
+
+// Greedily wraps text onto at most 2 lines, breaking at a word boundary at or
+// before maxChars. Used for long client names in treemap tiles.
+function wrapLabel(text, maxChars) {
+  if (text.length <= maxChars) return [text];
+  const words = text.split(' ');
+  let line1 = '';
+  let i = 0;
+  for (; i < words.length; i++) {
+    const next = line1 ? line1 + ' ' + words[i] : words[i];
+    if (next.length > maxChars && line1) break;
+    line1 = next;
+  }
+  const line2 = words.slice(i).join(' ');
+  return line2 ? [line1, line2] : [line1];
+}
+
+// The actual, confirmed root cause of the treemap-click saga: chartjs-chart-
+// treemap reconstructs its own internal "_data" per element from only the
+// fields referenced by `groups`/`key` in the dataset config (group_label,
+// client_name, active_rt_count) plus its own bookkeeping - any OTHER custom
+// field on the original tree record, like client_id, is silently dropped.
+// Confirmed directly from a real browser console dump: a genuine client
+// tile's reconstructed _data had client_name but no client_id key at all.
+// Fix: since client_name does survive, look the client_id up separately
+// against this map built straight from the source data, bypassing the
+// plugin's internal reconstruction entirely. (Client names are assumed
+// unique enough for this purpose - if two different clients ever share an
+// exact name, the later one in DRILLDOWN_DATA.clients wins here.)
+const CLIENT_ID_BY_NAME = {};
+DRILLDOWN_DATA.clients.forEach(c => { CLIENT_ID_BY_NAME[c.client_name] = c.client_id; });
+
+// Same fix, generalized: any display field NOT referenced by `groups`/`key`
+// (active_rt_count included, once the Parent Company grouping starts using a
+// different key - see buildTreemapData) is equally at risk of being silently
+// dropped from the plugin's internal _data. Rather than special-case that one
+// field, tile labels/tooltips resolve it through this lookup instead of
+// trusting whatever the plugin happened to retain.
+const CLIENT_BY_NAME = {};
+DRILLDOWN_DATA.clients.forEach(c => { CLIENT_BY_NAME[c.client_name] = c; });
+
+let currentGrouping = 'industry';
+let treemapChart = null;
+let selectedClientId = null;      // the client currently shown in the Sankey panel below the treemap
+let selectedClientName = null;
+let expandedRoles = new Set();    // role name -> expanded to show that role's RTs (scoped to selectedClientId)
+let sankeyTab = 'summary';        // 'summary' (headcount, no dates) | 'detail' (hours-weighted, date-ranged)
+const MAX_TOP_LEVEL_NODES = 15;   // cap per column, defensively - some clients have 100+ RTs
+let dateFrom = FULL_MIN_DATE;
+let dateTo = FULL_MAX_DATE;
+
+document.getElementById('dateFrom').min = FULL_MIN_DATE;
+document.getElementById('dateFrom').max = FULL_MAX_DATE;
+document.getElementById('dateTo').min = FULL_MIN_DATE;
+document.getElementById('dateTo').max = FULL_MAX_DATE;
+document.getElementById('dateFrom').value = FULL_MIN_DATE;
+document.getElementById('dateTo').value = FULL_MAX_DATE;
+
+function applyGlobalDateFilter() {
+  const f = document.getElementById('dateFrom').value;
+  const t = document.getElementById('dateTo').value;
+  if (!f || !t || f > t) { alert('Please choose a valid From/To range.'); return; }
+  dateFrom = f; dateTo = t;
+  // Live update: the Hours & Billing Detail tab's flow widths, tooltip
+  // numbers, and the invoice summary strip all depend on this range, so
+  // changing it has to redraw immediately, not just wait for the next hover.
+  if (selectedClientId && sankeyTab === 'detail') { renderSankey(); updateInvoiceSummary(); }
+}
+function resetGlobalDateFilter() {
+  dateFrom = FULL_MIN_DATE; dateTo = FULL_MAX_DATE;
+  document.getElementById('dateFrom').value = FULL_MIN_DATE;
+  document.getElementById('dateTo').value = FULL_MAX_DATE;
+  if (selectedClientId && sankeyTab === 'detail') { renderSankey(); updateInvoiceSummary(); }
+}
+
+// ---------------- Treemap (Group -> Client) ----------------
+
+// Client Tier grouping uses these headcount-based buckets instead of the
+// source CRM's own "Tier" text field (whose bucket boundaries were different -
+// 15+/8-14/4-7/2-3/.5-1). Clients the CRM left with no Tier at all ("Unclassified")
+// stay Unclassified regardless of headcount, per an explicit request not to
+// recompute those; everything else is bucketed purely off active_rt_count.
+// Boundaries are each bucket's own stated lower bound, so this is a clean,
+// gap-free partition even though the requested labels ("15+, 10 to 15, 5 to
+// 10, 3 to 4, 1 to 2, .5") read as if they had gaps between them.
+function tierBucket(c) {
+  if (!c.tier || c.tier === 'Unclassified') return 'Unclassified';
+  const n = c.active_rt_count;
+  if (n >= 15) return '15+';
+  if (n >= 10) return '10 to 15';
+  if (n >= 5) return '5 to 10';
+  if (n >= 3) return '3 to 4';
+  if (n >= 1) return '1 to 2';
+  return '.5';
+}
+
+function buildTreemapData(groupField) {
+  // "Parent Company" grouping only shows clients tagged with a family
+  // (~53 of 326) - unlike Industry/Tier, which include everyone via an
+  // "Unclassified" fallback, a client with no parent/child relationship has
+  // nothing meaningful to show here, so it's excluded entirely rather than
+  // bucketed.
+  const clients = groupField === 'family'
+    ? DRILLDOWN_DATA.clients.filter(c => c.family)
+    : DRILLDOWN_DATA.clients;
+  return clients.map(c => ({
+    group_label: groupField === 'industry' ? c.industry
+      : groupField === 'family' ? c.family
+      : tierBucket(c),
+    client_name: c.client_name,
+    client_id: c.client_id,
+    active_rt_count: c.active_rt_count,
+    // Constant per tile, used only as the Parent Company grouping's sizing
+    // key (see renderTreemap) - every member of a family counts equally, so
+    // a group's total area comes out proportional to its member count
+    // (parent + children), not to how many RTs are staffed there.
+    member_weight: 1
+  }));
+}
+
+const GROUP_BUTTON_IDS = { industry: 'btn-industry', family: 'btn-family', tier: 'btn-tier' };
+function setGrouping(field) {
+  currentGrouping = field;
+  Object.entries(GROUP_BUTTON_IDS).forEach(([f, id]) => {
+    document.getElementById(id).className = 'group-btn px-4 py-1.5 rounded-md text-sm font-medium ' + (field === f ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-800');
+  });
+  renderTreemap();
+}
+
+// ---------------- Client search (typeahead) ----------------
+// Bypasses the treemap entirely - useful once an industry has 100+ tiles and
+// scanning for one specific client isn't practical. Selecting a match opens
+// its Sankey exactly like clicking its tile would.
+
+function onClientSearchInput() {
+  const q = document.getElementById('clientSearchInput').value.trim().toLowerCase();
+  const box = document.getElementById('clientSearchResults');
+  if (!q) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+
+  const matches = DRILLDOWN_DATA.clients
+    .filter(c => c.client_name.toLowerCase().includes(q))
+    .sort((a, b) => b.active_rt_count - a.active_rt_count)
+    .slice(0, 10);
+
+  if (!matches.length) {
+    box.innerHTML = '<div class="px-3 py-2 text-sm text-slate-400">No matching clients</div>';
+    box.classList.remove('hidden');
+    return;
+  }
+
+  box.innerHTML = matches.map(c => `
+    <div class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer border-b border-slate-100 last:border-0"
+         onclick="selectClientFromSearch('${c.client_id}')">
+      <div class="font-medium text-slate-700">${c.client_name}</div>
+      <div class="text-slate-400 text-xs">${c.industry} · ${c.active_rt_count} active RT${c.active_rt_count === 1 ? '' : 's'}</div>
+    </div>
+  `).join('');
+  box.classList.remove('hidden');
+}
+
+function onClientSearchKeydown(evt) {
+  if (evt.key === 'Escape') {
+    document.getElementById('clientSearchResults').classList.add('hidden');
+  } else if (evt.key === 'Enter') {
+    const first = document.querySelector('#clientSearchResults > div[onclick]');
+    if (first) first.click();
+  }
+}
+
+function selectClientFromSearch(clientId) {
+  const c = DRILLDOWN_DATA.clients.find(x => x.client_id === clientId);
+  document.getElementById('clientSearchInput').value = '';
+  document.getElementById('clientSearchResults').classList.add('hidden');
+  if (c) selectClientForSankey(c.client_id, c.client_name);
+}
+
+document.addEventListener('click', (evt) => {
+  const box = document.getElementById('clientSearchResults');
+  const input = document.getElementById('clientSearchInput');
+  if (box && !box.contains(evt.target) && evt.target !== input) {
+    box.classList.add('hidden');
+  }
+});
+
+function renderTreemap() {
+  const hint = document.getElementById('treemapHint');
+  if (currentGrouping === 'family') {
+    const familyClients = DRILLDOWN_DATA.clients.filter(c => c.family);
+    const familyCount = new Set(familyClients.map(c => c.family)).size;
+    hint.textContent = `Showing only clients that are part of a multi-entity parent company group (${familyClients.length} clients across ${familyCount} groups). Tile size = active RT headcount. Click a member tile to see its RT breakdown below.`;
+  } else {
+    hint.textContent = 'Tile size = active RT headcount. Click a client tile to see its RT breakdown below.';
+  }
+
+  const errBox = document.getElementById('treemapError');
+  errBox.classList.add('hidden');
+  if (typeof Chart === 'undefined') {
+    errBox.textContent = 'Chart.js failed to load from the CDN.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  if (!Chart.registry.controllers.get('treemap')) {
+    errBox.textContent = 'The treemap chart plugin failed to load or register. Check the browser console (F12).';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  const treeData = buildTreemapData(currentGrouping);
+  if (treemapChart) treemapChart.destroy();
+  const ctx = document.getElementById('treemapChart').getContext('2d');
+  try {
+  treemapChart = new Chart(ctx, {
+    type: 'treemap',
+    data: {
+      datasets: [{
+        tree: treeData,
+        // Parent Company grouping sizes tiles/groups by member_weight (a
+        // constant 1 per tile, so a family's total area = its member count)
+        // instead of active_rt_count, per request - RT count still drives
+        // sizing for Industry and Tier, unchanged.
+        key: currentGrouping === 'family' ? 'member_weight' : 'active_rt_count',
+        groups: ['group_label', 'client_name'],
+        spacing: 1,
+        borderWidth: 1,
+        borderColor: '#ffffff',
+        backgroundColor(ctx) {
+          if (!ctx.raw) return '#e2e8f0';
+          const g = ctx.raw.g ?? (ctx.raw._data && ctx.raw._data.group_label);
+          return colorFor(g || 'x') + 'cc';
+        },
+        labels: {
+          display: true,
+          color: '#ffffff',
+          font: { size: 11 },
+          formatter(ctx) {
+            // Same client_name check as the tooltip callback below, for the
+            // same reason - header bands carry a truthy _data without a
+            // client_name. In practice the plugin's own group captions render
+            // headers anyway, so this branch is mostly a safety net.
+            const d = ctx.raw && ctx.raw._data;
+            if (d && d.client_name) {
+              // Wrap long names onto a 2nd line instead of letting them run
+              // off the edge of big-enough tiles (e.g. "Sentry Management,
+              // Inc. - Financial Reporting"). ctx.raw.w (the tile's rendered
+              // pixel width) isn't guaranteed present on every chartjs-chart-
+              // treemap version, so this falls back to a conservative fixed
+              // width estimate rather than skipping the wrap entirely.
+              const widthPx = (ctx.raw && typeof ctx.raw.w === 'number') ? ctx.raw.w : 80;
+              const maxChars = Math.max(8, Math.floor(widthPx / 6.5));
+              // active_rt_count is read via CLIENT_BY_NAME, not d.active_rt_count -
+              // it's still a real field on every tile record, but once the
+              // Parent Company grouping switched `key` to member_weight, only
+              // group_label/client_name/member_weight survive in the plugin's
+              // own reconstructed _data (see the CLIENT_BY_NAME comment above).
+              const rtCount = (CLIENT_BY_NAME[d.client_name] || {}).active_rt_count;
+              return [...wrapLabel(d.client_name, maxChars), `${rtCount} RTs`];
+            }
+            if (ctx.raw && ctx.raw.g) return ctx.raw.g;
+            return '';
+          }
+        }
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      // Forces exact point-in-rectangle containment for hit-testing (no
+      // "nearest within some radius" fuzzy matching) - this is what the
+      // `elements` array passed into onClick below is built from, and fuzzy
+      // "nearest" matching near a tile boundary is what caused two separate
+      // wrong-client bugs (Frontsteps -> Folio, RENOSY -> Highmark). Fixing it
+      // here, at the source, means the proven-reliable `elements` + $context
+      // extraction (see onClick) can be trusted again instead of needing a
+      // manual index-based workaround.
+      interaction: { mode: 'point', intersect: true },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title() { return ''; },
+            label(ctx) {
+              const d = ctx.raw && ctx.raw._data;
+              // Group-header bands also hit this callback with a synthetic
+              // aggregate record (group_label + summed active_rt_count, but no
+              // client_name) - client_name is confirmed (by direct evidence, not
+              // guesswork) to be the field that's present on real leaf tiles and
+              // undefined on header bands, so it's used here to tell them apart.
+              // (An earlier version checked client_id instead, which turned out
+              // not to survive the plugin's internal data handling at all, and
+              // broke tooltips for every tile, not just headers.) Returning null
+              // (not '') is what actually suppresses the line in Chart.js v4.
+              if (!d || !d.client_name) return null;
+              const rtCount = (CLIENT_BY_NAME[d.client_name] || {}).active_rt_count;
+              return `${d.client_name} (${d.group_label}) — ${rtCount} active RTs. Click to see its RTs below.`;
+            }
+          }
+        }
+      },
+      onClick(evt, elements, chart) {
+        // Root cause confirmed directly from a real console dump (see README):
+        // chartjs-chart-treemap's reconstructed _data for an element only ever
+        // contains the fields referenced by groups/key (group_label,
+        // client_name, active_rt_count) - client_id, an extra field this page
+        // added, was silently dropped, which is why every previous fix here
+        // failed regardless of which JS property path was used to read _data.
+        // client_name does survive, so it's looked up against CLIENT_ID_BY_NAME
+        // (built straight from the source data) instead.
+        let rec = null;
+        for (const el of elements) {
+          const raw = el.element && el.element.$context && el.element.$context.raw;
+          const d = raw && raw._data;
+          if (d && d.client_name && CLIENT_ID_BY_NAME[d.client_name]) {
+            rec = { client_id: CLIENT_ID_BY_NAME[d.client_name], client_name: d.client_name };
+            break;
+          }
+          // else: header band (no client_name) - keep checking the rest.
+        }
+
+        console.log('[treemap click] elements:', elements.length, '-> matched:', rec && rec.client_name);
+        if (rec) {
+          selectClientForSankey(rec.client_id, rec.client_name);
+        } else {
+          console.log('[treemap click] no client tile found at this click point - only header band(s) matched.');
+        }
+      }
+    }
+  });
+  } catch (err) {
+    console.error('[treemap] failed:', err);
+    errBox.textContent = 'Failed to draw the treemap: ' + err.message;
+    errBox.classList.remove('hidden');
+  }
+}
+
+// ---------------- Sankey (selected Client -> [Roles] -> RTs), plotted below the treemap ----------------
+// Pure SVG via D3 + d3-sankey - no iframe, so this works under file:// (see the
+// <head> comment for why Google Charts didn't).
+
+function selectClientForSankey(clientId, clientName) {
+  selectedClientId = clientId;
+  selectedClientName = clientName;
+  expandedRoles = new Set();
+  sankeyTab = 'summary';
+  document.getElementById('sankeyView').classList.remove('hidden');
+  document.getElementById('sankeyClientLabel').textContent = clientName;
+  updateSankeyTabUI();
+  updateClientInfo();
+  updateInvoiceSummary();
+  renderSankey();
+  document.getElementById('sankeyView').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function setSankeyTab(tab) {
+  sankeyTab = tab;
+  updateSankeyTabUI();
+  updateInvoiceSummary();
+  renderSankey();
+}
+
+function updateSankeyTabUI() {
+  const activeCls = 'px-4 py-1.5 rounded-md text-sm font-medium bg-white shadow-sm text-blue-600';
+  const inactiveCls = 'px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800';
+  document.getElementById('tab-summary').className = sankeyTab === 'summary' ? activeCls : inactiveCls;
+  document.getElementById('tab-detail').className = sankeyTab === 'detail' ? activeCls : inactiveCls;
+
+  const dc = document.getElementById('sankeyDateControls');
+  dc.classList.toggle('hidden', sankeyTab !== 'detail');
+  dc.classList.toggle('flex', sankeyTab === 'detail');
+
+  document.getElementById('sankeyHint').textContent = sankeyTab === 'detail'
+    ? 'Flow widths = hours worked in the date range above. Click a role to see its RTs; click again to collapse. Hover any RT for full hours/$ details.'
+    : 'Flow widths = active RT headcount (no date range). Click a role to see its RTs; click again to collapse. Hover any RT for basic details.';
+}
+
+function closeSankey() {
+  selectedClientId = null;
+  selectedClientName = null;
+  expandedRoles = new Set();
+  document.getElementById('sankeyView').classList.add('hidden');
+  hideTooltip();
+}
+
+// Decide, for a client, whether Roles add grouping value; see README for the
+// 0.7 cutoff rationale.
+function clientUsesRoles(rts) {
+  if (rts.length <= 1) return false;
+  const distinctRoles = new Set(rts.map(rt => rt.role_title || 'Unspecified'));
+  return (distinctRoles.size / rts.length) < ROLE_SKIP_RATIO;
+}
+
+// Sum of regular+overtime hours logged by one RT within the current
+// dateFrom/dateTo range. Used only in 'detail' mode.
+function hoursInRange(contractorId) {
+  const history = DRILLDOWN_DATA.hours_by_rt[contractorId] || [];
+  return history
+    .filter(h => h.date >= dateFrom && h.date <= dateTo)
+    .reduce((s, h) => s + h.regular + h.overtime, 0);
+}
+
+// Count of no-shows within the current dateFrom/dateTo range. Reliability
+// signal alongside hours/$ - used only in 'detail' mode, same as hoursInRange.
+function missedShiftsInRange(contractorId) {
+  const missed = DRILLDOWN_DATA.missed_by_rt[contractorId] || [];
+  return missed.filter(date => date >= dateFrom && date <= dateTo).length;
+}
+
+// Client identity/context strip - Industry, Tier (the recomputed headcount
+// bucket used throughout this page, not the raw CRM field, so it's consistent
+// with the treemap's Client Tier grouping), Health Score, Annual Revenue.
+// Doesn't depend on tab or date filter - set once per client selection.
+const HEALTH_BADGE_CLASS = {
+  Green: 'bg-green-100 text-green-700',
+  Amber: 'bg-amber-100 text-amber-700',
+  Red: 'bg-red-100 text-red-700'
+};
+function updateClientInfo() {
+  const box = document.getElementById('clientInfo');
+  const c = DRILLDOWN_DATA.clients.find(x => x.client_id === selectedClientId);
+  if (!c) { box.innerHTML = ''; return; }
+  const healthLabel = c.health_score || 'Unclassified';
+  const healthCls = HEALTH_BADGE_CLASS[c.health_score] || 'bg-slate-100 text-slate-500';
+  const revenue = c.annual_revenue != null
+    ? '$' + c.annual_revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })
+    : '—';
+  box.innerHTML = `
+    <span><span class="text-slate-400">Industry:</span> ${c.industry}</span>
+    <span class="text-slate-300">·</span>
+    <span><span class="text-slate-400">Tier:</span> ${tierBucket(c)}</span>
+    <span class="text-slate-300">·</span>
+    <span class="inline-flex items-center gap-1"><span class="text-slate-400">Health:</span>
+      <span class="px-2 py-0.5 rounded-full text-xs font-medium ${healthCls}">${healthLabel}</span>
+    </span>
+    <span class="text-slate-300">·</span>
+    <span><span class="text-slate-400">Annual Revenue:</span> ${revenue}</span>
+  `;
+}
+
+// Actual invoiced revenue for a client, from Invoices.csv - a real billed
+// number, independent of the hours x rate estimates used elsewhere on this
+// page. Pass a date range to restrict to invoices dated in that window
+// (Hours & Billing Detail tab); pass none for all invoices on file (Roster
+// Summary tab) - these are genuinely different questions ("what have we ever
+// billed this client" vs "what was billed in this specific window"), not the
+// same number filtered two ways.
+function computeInvoiceSummary(clientId, from, to) {
+  const invoices = (DRILLDOWN_DATA.invoices_by_client && DRILLDOWN_DATA.invoices_by_client[clientId]) || [];
+  const scoped = (from && to) ? invoices.filter(inv => inv.date >= from && inv.date <= to) : invoices;
+  let paidRevenue = 0, openBalance = 0, paidCount = 0, openCount = 0;
+  scoped.forEach(inv => {
+    if (inv.status === 'Paid') { paidRevenue += inv.amount_billed; paidCount++; }
+    else if (inv.status === 'Open') { openBalance += inv.balance_due; openCount++; }
+  });
+  return { paidRevenue, openBalance, paidCount, openCount, invoiceCount: scoped.length };
+}
+
+function updateInvoiceSummary() {
+  if (!selectedClientId) return;
+  const box = document.getElementById('invoiceSummary');
+  const scoped = sankeyTab === 'detail';
+  const summary = scoped
+    ? computeInvoiceSummary(selectedClientId, dateFrom, dateTo)
+    : computeInvoiceSummary(selectedClientId, null, null);
+  const periodLabel = scoped ? `${dateFrom} → ${dateTo}` : 'all invoices on file';
+  const money = (n) => '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  if (summary.invoiceCount === 0) {
+    box.innerHTML = `
+      <div class="col-span-3 text-sm text-slate-400 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+        No invoices ${scoped ? `dated ${periodLabel}` : 'on file'} for this client.
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="bg-green-50 border border-green-100 rounded-lg p-3 text-center">
+      <p class="text-xs text-slate-500 uppercase font-semibold">Actual Paid Revenue</p>
+      <p class="text-lg font-bold text-green-700 mt-1">${money(summary.paidRevenue)}</p>
+      <p class="text-[11px] text-slate-400">${summary.paidCount} invoice${summary.paidCount === 1 ? '' : 's'}</p>
+    </div>
+    <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-center">
+      <p class="text-xs text-slate-500 uppercase font-semibold">Open Balance</p>
+      <p class="text-lg font-bold text-red-700 mt-1">${money(summary.openBalance)}</p>
+      <p class="text-[11px] text-slate-400">${summary.openCount} invoice${summary.openCount === 1 ? '' : 's'}</p>
+    </div>
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+      <p class="text-xs text-slate-500 uppercase font-semibold">Period</p>
+      <p class="text-sm font-medium text-slate-700 mt-1">${periodLabel}</p>
+      <p class="text-[11px] text-slate-400">${summary.invoiceCount} invoice${summary.invoiceCount === 1 ? '' : 's'} total</p>
+    </div>
+  `;
+}
+
+// Builds a {nodes, links} graph for d3-sankey. Each node carries an "info"
+// object directly (type + identifying fields) - unlike the Google Charts
+// version, there's no separate label->info lookup map needed, since D3 hands
+// back the exact bound node object on every hover/click event.
+//
+// mode 'summary': flow widths = active RT headcount, no date dependency.
+// mode 'detail': flow widths = hours worked within dateFrom/dateTo. An RT with
+// 0 hours in the selected range still gets a node (via a tiny epsilon value,
+// since d3-sankey needs a positive number) rather than disappearing, so the
+// roster stays visible even when nobody worked in a narrow window.
+function buildSankeyGraph(mode) {
+  const nodes = [];
+  const links = [];
+  function addNode(label, info) {
+    nodes.push({ label, info });
+    return nodes.length - 1;
+  }
+  const weightFor = (rt) => (mode === 'detail' ? Math.max(hoursInRange(rt.contractor_id), 0.001) : 1);
+
+  if (!selectedClientId) return { nodes, links };
+
+  // Root = the client selected on the treemap. Not togglable itself (it's
+  // already the fixed starting point), tagged 'client_root' so toggleExpand()
+  // leaves it alone.
+  const rootIdx = addNode(selectedClientName, { type: 'client_root', client_id: selectedClientId });
+
+  const rts = DRILLDOWN_DATA.rts_by_client[selectedClientId] || [];
+  if (!rts.length) return { nodes, links };
+
+  if (clientUsesRoles(rts)) {
+    // --- Client -> Roles (capped with an "Other" bucket, defensively - the
+    // largest clients seen in this data top out around 15 distinct roles, but
+    // this protects against any client not yet checked). ---
+    const roleWeight = {};
+    rts.forEach(rt => { const r = rt.role_title || 'Unspecified'; roleWeight[r] = (roleWeight[r] || 0) + weightFor(rt); });
+    const roleEntries = Object.entries(roleWeight).sort((a, b) => b[1] - a[1]);
+    const shownRoles = roleEntries.slice(0, MAX_TOP_LEVEL_NODES);
+    const otherRoles = roleEntries.slice(MAX_TOP_LEVEL_NODES);
+
+    const roleIdxByName = {};
+    shownRoles.forEach(([role, weight]) => {
+      const idx = addNode(role, { type: 'role', client_id: selectedClientId, role });
+      roleIdxByName[role] = idx;
+      links.push({ source: rootIdx, target: idx, value: weight });
+    });
+    if (otherRoles.length) {
+      const otherWeight = otherRoles.reduce((s, [, w]) => s + w, 0);
+      const idx = addNode(`+ ${otherRoles.length} more roles`, { type: 'other' });
+      links.push({ source: rootIdx, target: idx, value: otherWeight });
+    }
+
+    // --- Role -> RTs, only for roles the user has clicked ---
+    rts.forEach(rt => {
+      const role = rt.role_title || 'Unspecified';
+      if (!expandedRoles.has(role) || roleIdxByName[role] == null) return;
+      const idx = addNode(`${rt.rt_name} (${rt.contractor_id})`, Object.assign({ type: 'rt', client_id: selectedClientId }, rt));
+      links.push({ source: roleIdxByName[role], target: idx, value: weightFor(rt) });
+    });
+  } else {
+    // No Roles level for this client - go straight to Client -> RTs (capped
+    // defensively, though in practice these clients have few RTs since the
+    // skip-roles rule is ratio-based).
+    const sorted = rts.slice().sort((a, b) => weightFor(b) - weightFor(a));
+    const shown = sorted.slice(0, MAX_TOP_LEVEL_NODES);
+    const other = sorted.slice(MAX_TOP_LEVEL_NODES);
+    shown.forEach(rt => {
+      const idx = addNode(`${rt.rt_name} (${rt.contractor_id})`, Object.assign({ type: 'rt', client_id: selectedClientId }, rt));
+      links.push({ source: rootIdx, target: idx, value: weightFor(rt) });
+    });
+    if (other.length) {
+      const otherWeight = other.reduce((s, rt) => s + weightFor(rt), 0);
+      const idx = addNode(`+ ${other.length} more RTs`, { type: 'other' });
+      links.push({ source: rootIdx, target: idx, value: otherWeight });
+    }
+  }
+
+  return { nodes, links };
+}
+
+function sankeyNodeColorKey(d) {
+  const info = d.info;
+  if (!info) return d.label;
+  if (info.type === 'role') return info.role;
+  if (info.type === 'rt') return info.role_title || info.rt_name;
+  return d.label;
+}
+
+function renderSankey() {
+  const errBox = document.getElementById('sankeyError');
+  const infoBox = document.getElementById('sankeyInfo');
+  errBox.classList.add('hidden');
+  infoBox.classList.add('hidden');
+  const container = document.getElementById('sankeyChartDiv');
+  container.innerHTML = '';
+
+  if (typeof d3 === 'undefined' || typeof d3.sankey === 'undefined') {
+    errBox.textContent = 'The Sankey chart library (D3 / d3-sankey) failed to load from the CDN. Check the browser console (F12) and your internet connection.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  const { nodes, links } = buildSankeyGraph(sankeyTab);
+  if (!nodes.length) {
+    errBox.textContent = 'No active RTs found for this client.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  if (sankeyTab === 'detail' && !links.some(l => l.value > 0.001)) {
+    infoBox.textContent = `No hours logged for ${selectedClientName} between ${dateFrom} and ${dateTo} - try a wider date range, or switch to Roster Summary. (The roster below still shows who's assigned, just with zero-width flows.)`;
+    infoBox.classList.remove('hidden');
+    // Still falls through to draw the (all-zero) diagram beneath the note,
+    // rather than blocking entirely - the roster is still useful context.
+  }
+
+  try {
+    const width = container.clientWidth || 900;
+    const height = 520;
+
+    const sankeyLayout = d3.sankey()
+      .nodeWidth(16)
+      .nodePadding(14)
+      // Default alignment (sankeyJustify) pushes any node with no CURRENT
+      // outgoing links as far right as possible - so a not-yet-expanded role
+      // (no children shown) and an expanded role's RTs both count as "sinks"
+      // and get crammed into the same rightmost column. sankeyLeft instead
+      // places every node by its distance from the root, so Client is always
+      // column 0, every role is always column 1 (expanded or not), and every
+      // RT is always column 2 - the standard layout for a strict hierarchy.
+      .nodeAlign(d3.sankeyLeft)
+      .extent([[1, 5], [width - 1, height - 5]]);
+
+    // d3-sankey mutates its input in place and resolves numeric source/target
+    // indices into direct node-object references - fresh shallow copies are
+    // passed in so re-rendering (role expand/collapse) always starts clean.
+    const graph = sankeyLayout({
+      nodes: nodes.map(n => Object.assign({}, n)),
+      links: links.map(l => Object.assign({}, l))
+    });
+
+    const svg = d3.select(container).append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('viewBox', [0, 0, width, height]);
+
+    svg.append('g')
+      .attr('fill', 'none')
+      .selectAll('path')
+      .data(graph.links)
+      .join('path')
+        .attr('d', d3.sankeyLinkHorizontal())
+        .attr('stroke', d => colorFor(sankeyNodeColorKey(d.source)))
+        .attr('stroke-opacity', 0.35)
+        .attr('stroke-width', d => Math.max(1, d.width));
+
+    svg.append('g')
+      .selectAll('rect')
+      .data(graph.nodes)
+      .join('rect')
+        .attr('x', d => d.x0)
+        .attr('y', d => d.y0)
+        .attr('width', d => d.x1 - d.x0)
+        .attr('height', d => Math.max(1, d.y1 - d.y0))
+        .attr('fill', d => colorFor(sankeyNodeColorKey(d)))
+        .style('cursor', d => (d.info && d.info.type === 'role') ? 'pointer' : 'default')
+        .on('mouseover', (event, d) => {
+          if (!d.info) return;
+          const basic = sankeyTab === 'summary';
+          if (d.info.type === 'rt') showRTTooltip(d.info, basic);
+          else if (d.info.type === 'role') showRoleTooltip(d.info, basic);
+        })
+        .on('mousemove', () => positionTooltip())
+        .on('mouseout', () => hideTooltip())
+        .on('click', (event, d) => toggleExpand(d.info, 'D3 click'));
+
+    svg.append('g')
+      .attr('font-size', 12)
+      .attr('fill', '#1e293b')
+      .selectAll('text')
+      .data(graph.nodes)
+      .join('text')
+        .attr('x', d => (d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6))
+        .attr('y', d => (d.y0 + d.y1) / 2)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', d => (d.x0 < width / 2 ? 'start' : 'end'))
+        .style('pointer-events', 'none')
+        .text(d => (d.label.length > 30 ? d.label.slice(0, 28) + '…' : d.label));
+  } catch (err) {
+    console.error('[sankey] failed to draw:', err);
+    errBox.textContent = 'Failed to draw the Sankey: ' + err.message + ' (full details in the browser console, F12).';
+    errBox.classList.remove('hidden');
+  }
+}
+
+// Expand/collapse a Role node into its RTs. The client root node isn't
+// togglable (it's already the fixed starting point, chosen via the treemap)
+// and RT/other nodes are leaves, so Role is the only actionable type here.
+function toggleExpand(info, source) {
+  if (!info || info.type !== 'role') return false;
+  if (expandedRoles.has(info.role)) expandedRoles.delete(info.role);
+  else expandedRoles.add(info.role);
+  console.log(`[sankey ${source}] toggled role`, info.role);
+  renderSankey();
+  return true;
+}
+
+// ---------------- RT hover tooltip (role/rates/hours/$ + compact heatmap) ----------------
+
+function computeRTStats(rt) {
+  const history = DRILLDOWN_DATA.hours_by_rt[rt.contractor_id] || [];
+  const filtered = history.filter(h => h.date >= dateFrom && h.date <= dateTo);
+  let totalHours = 0, totalOT = 0;
+  filtered.forEach(h => { totalHours += (h.regular + h.overtime); totalOT += h.overtime; });
+  // Est. Cost = hours x Current Rate with Client (RS's cost-side rate,
+  // inclusive of any client-funded raise), falling back to RS Base Rate when
+  // Current Rate with Client isn't set (~1.7% of active RTs).
+  const costRate = rt.current_rate_with_client != null ? rt.current_rate_with_client : rt.rs_base_rate;
+  const cost = totalHours * (costRate || 0);
+  // Est. Revenue = hours x Partner Rate (the rate actually billed to the
+  // client - confirmed distinct from, and ~2.2x, Current Rate with Client).
+  // Three states: 'fixed' (this RT bills a flat monthly fee instead of
+  // hourly - excluded from hours-based revenue for now, per internal review),
+  // 'unavailable' (no usable Partner Rate on file - shows "—" rather than a
+  // misleading $0, since $0 here sometimes just means "billed another way"),
+  // or 'ok' (normal hours x Partner Rate).
+  let revenue = null;
+  let revenueStatus = 'ok';
+  if (rt.fixed_rate != null) {
+    revenueStatus = 'fixed';
+  } else if (rt.partner_rate) {
+    revenue = totalHours * rt.partner_rate;
+  } else {
+    revenueStatus = 'unavailable';
+  }
+  // "Shift" = one rt_logins/rt_missed_logins row (a scheduled session), not a
+  // calendar day - RTs don't all have a daily cadence (avg ~8 rows across the
+  // 15-day window, some as few as 1). workedShifts is the row count actually
+  // logged in range; missedShifts is the no-show row count in the same range;
+  // together they're the denominator for a miss RATE, which is what makes a
+  // raw missed count meaningful (13 missed means something very different out
+  // of 13 total scheduled vs. out of 40).
+  const workedShifts = filtered.length;
+  const missedShifts = missedShiftsInRange(rt.contractor_id);
+  const totalShifts = workedShifts + missedShifts;
+  return { filtered, totalHours, totalOT, revenue, revenueStatus, cost, workedShifts, missedShifts, totalShifts };
+}
+
+function buildHeatmapHTML(history, missedDates) {
+  // one full 15-day window shown regardless of the From/To filter, so the shape
+  // of the RT's whole login history stays visible - the filter only affects the
+  // aggregated numbers, not this strip. Most days look alike for a given RT, so a
+  // compact heatmap (not a bar/line chart) is used to spot the few days that differ.
+  // missedDates (no-show days, always full-window) get a red ring so reliability
+  // gaps show up in the same calendar view as hours worked, not just as a count.
+  const byDate = {};
+  history.forEach(h => { byDate[h.date] = h; });
+  const missedSet = new Set(missedDates || []);
+  const maxHours = Math.max(1, ...history.map(h => h.regular + h.overtime));
+  let html = '';
+  // Explicit "Z" (UTC) throughout, and setUTCDate for stepping - using local-time
+  // Date parsing here would silently shift every cell by a day for anyone in a
+  // timezone ahead of UTC (e.g. India, Philippines) once toISOString() converts
+  // back to UTC for the lookup key.
+  let d = new Date(FULL_MIN_DATE + 'T00:00:00Z');
+  const end = new Date(FULL_MAX_DATE + 'T00:00:00Z');
+  while (d <= end) {
+    const iso = d.toISOString().slice(0, 10);
+    const rec = byDate[iso];
+    const hrs = rec ? rec.regular + rec.overtime : 0;
+    const ot = rec ? rec.overtime : 0;
+    const missed = missedSet.has(iso);
+    const alpha = rec ? (0.15 + 0.85 * (hrs / maxHours)) : 0.08;
+    const color = ot > 0 ? `rgba(217,119,6,${alpha.toFixed(2)})` : `rgba(37,99,235,${alpha.toFixed(2)})`;
+    const title = `${iso}: ${hrs.toFixed(1)}h${ot > 0 ? ' (' + ot.toFixed(1) + 'h OT)' : ''}${missed ? ' — missed shift' : ''}`;
+    html += `<span class="heat-cell${missed ? ' heat-cell-missed' : ''}" style="background:${color}" title="${title}"></span>`;
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return html;
+}
+
+function showRTTooltip(rt, basic) {
+  const body = document.getElementById('rtTooltipBody');
+
+  if (basic) {
+    // Roster Summary tab: identity + rates only, no date-dependent figures -
+    // there's no date range in this tab, so hours/$ numbers would be
+    // meaningless here rather than just "less detailed".
+    body.innerHTML = `
+      <div class="font-semibold text-sm mb-1">${rt.rt_name}</div>
+      <div class="text-slate-300 mb-2">${rt.role_title || 'Role unspecified'} · started ${rt.start_date || '—'}</div>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+        <div>RS Base Rate: <span class="font-medium">${rt.rs_base_rate != null ? '$' + rt.rs_base_rate.toFixed(2) : '—'}</span></div>
+        <div>RS Current Rate: <span class="font-medium">${rt.current_rate_with_client != null ? '$' + rt.current_rate_with_client.toFixed(2) : '—'}</span></div>
+        <div>Billed Rate: <span class="font-medium">${rt.partner_rate ? '$' + rt.partner_rate.toFixed(2) : '—'}</span></div>
+        ${rt.fixed_rate != null ? `<div>Fixed Rate: <span class="font-medium">$${rt.fixed_rate.toFixed(2)}/mo</span></div>` : ''}
+      </div>
+      <div class="text-slate-400 mt-2 text-[11px]">Switch to Hours &amp; Billing Detail for hours, $, and the login heatmap.</div>
+    `;
+  } else {
+    const stats = computeRTStats(rt);
+    const history = DRILLDOWN_DATA.hours_by_rt[rt.contractor_id] || [];
+    const missedDates = DRILLDOWN_DATA.missed_by_rt[rt.contractor_id] || [];
+    const revenueCell = stats.revenueStatus === 'fixed'
+      ? '<span class="font-medium text-slate-400">Fixed Rate (excluded)</span>'
+      : stats.revenueStatus === 'unavailable'
+      ? '<span class="font-medium text-slate-400">—</span>'
+      : `<span class="font-medium text-green-400">$${stats.revenue.toFixed(2)}</span>`;
+    body.innerHTML = `
+      <div class="font-semibold text-sm mb-1">${rt.rt_name}</div>
+      <div class="text-slate-300 mb-2">${rt.role_title || 'Role unspecified'} · started ${rt.start_date || '—'}</div>
+      <div class="text-slate-400 mb-1">Hours &amp; $ for ${dateFrom} → ${dateTo}${(dateFrom === FULL_MIN_DATE && dateTo === FULL_MAX_DATE) ? ' (full window)' : ''}:</div>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-1 mb-1">
+        <div>RS Base Rate: <span class="font-medium">${rt.rs_base_rate != null ? '$' + rt.rs_base_rate.toFixed(2) : '—'}</span></div>
+        <div>RS Current Rate: <span class="font-medium">${rt.current_rate_with_client != null ? '$' + rt.current_rate_with_client.toFixed(2) : '—'}</span></div>
+        <div>Billed Rate: <span class="font-medium">${rt.partner_rate ? '$' + rt.partner_rate.toFixed(2) : '—'}</span></div>
+        ${rt.fixed_rate != null ? `<div>Fixed Rate: <span class="font-medium">$${rt.fixed_rate.toFixed(2)}/mo</span></div>` : ''}
+        <div>Total Hours: <span class="font-medium">${stats.totalHours.toFixed(1)}</span></div>
+        <div>Overtime: <span class="font-medium text-amber-400">${stats.totalOT.toFixed(1)}</span></div>
+        <div>Est. Revenue: ${revenueCell}</div>
+        <div>Est. Cost: <span class="font-medium text-blue-300">$${stats.cost.toFixed(2)}</span></div>
+      </div>
+      ${stats.revenueStatus === 'fixed' ? `<div class="text-amber-600 text-[11px] mb-2">This RT bills at a flat $${rt.fixed_rate.toFixed(2)}/mo instead of hourly - Est. Revenue excludes fixed-rate RTs for now.</div>` : ''}
+      <div class="mb-2">Shifts: <span class="font-medium">${stats.workedShifts} worked</span> / <span class="font-medium ${stats.missedShifts > 0 ? 'text-red-400' : 'text-slate-300'}">${stats.missedShifts} missed</span> <span class="text-slate-400">(${stats.totalShifts} total${stats.totalShifts > 0 ? ', ' + Math.round(100 * stats.missedShifts / stats.totalShifts) + '% missed' : ''})</span></div>
+      <div class="text-slate-400 mb-1">Full login history ${FULL_MIN_DATE} → ${FULL_MAX_DATE} (blue=regular, amber=has overtime, darker=more hours, red ring=missed shift; shown in full regardless of the date filter above):</div>
+      <div class="leading-none">${history.length || missedDates.length ? buildHeatmapHTML(history, missedDates) : '<span class="text-slate-400">No logged hours in this window</span>'}</div>
+    `;
+  }
+
+  const tip = document.getElementById('rtTooltip');
+  tip.classList.remove('hidden');
+  positionTooltip();
+}
+
+// Aggregates every RT under one role at the currently selected client:
+// averages for Roster Summary (rates don't have a date dimension, so an
+// average is the natural "same fields as an RT, but rolled up" reading),
+// sums for Hours & Billing Detail (hours/$ are additive across RTs, not
+// averaged - "consolidated" per the request this was built from).
+function computeRoleAggregate(role, basic) {
+  const rts = (DRILLDOWN_DATA.rts_by_client[selectedClientId] || [])
+    .filter(rt => (rt.role_title || 'Unspecified') === role);
+
+  if (basic) {
+    const baseRates = rts.filter(rt => rt.rs_base_rate != null).map(rt => rt.rs_base_rate);
+    const currentRates = rts.filter(rt => rt.current_rate_with_client != null).map(rt => rt.current_rate_with_client);
+    // Partner Rate average excludes fixed-rate RTs and RTs with no usable
+    // Partner Rate (same "—" treatment as the individual RT tooltip) - a $0
+    // here doesn't mean $0 billing, it means "billed another way," and
+    // averaging it in would silently drag the average down.
+    const partnerRates = rts.filter(rt => rt.fixed_rate == null && rt.partner_rate).map(rt => rt.partner_rate);
+    const fixedRateCount = rts.filter(rt => rt.fixed_rate != null).length;
+    const starts = rts.map(rt => rt.start_date).filter(Boolean).sort();
+    const avg = (arr) => (arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null);
+    return {
+      rtCount: rts.length,
+      avgBaseRate: avg(baseRates),
+      avgCurrentRate: avg(currentRates),
+      avgPartnerRate: avg(partnerRates),
+      fixedRateCount,
+      earliestStart: starts[0] || null,
+      latestStart: starts[starts.length - 1] || null
+    };
+  }
+
+  let totalHours = 0, totalOT = 0, totalRevenue = 0, totalCost = 0;
+  let totalWorkedShifts = 0, totalMissed = 0;
+  let fixedRateCount = 0, unavailableCount = 0;
+  rts.forEach(rt => {
+    const stats = computeRTStats(rt);
+    totalHours += stats.totalHours;
+    totalOT += stats.totalOT;
+    totalCost += stats.cost;
+    totalWorkedShifts += stats.workedShifts;
+    totalMissed += stats.missedShifts;
+    if (stats.revenueStatus === 'ok') totalRevenue += stats.revenue;
+    else if (stats.revenueStatus === 'fixed') fixedRateCount++;
+    else unavailableCount++;
+  });
+  const totalShifts = totalWorkedShifts + totalMissed;
+  return { rtCount: rts.length, totalHours, totalOT, totalRevenue, totalCost, totalWorkedShifts, totalMissed, totalShifts, fixedRateCount, unavailableCount };
+}
+
+function showRoleTooltip(info, basic) {
+  const body = document.getElementById('rtTooltipBody');
+  const agg = computeRoleAggregate(info.role, basic);
+  const rtLabel = agg.rtCount === 1 ? '1 RT' : `${agg.rtCount} RTs`;
+
+  if (basic) {
+    const startRange = agg.earliestStart && agg.latestStart
+      ? (agg.earliestStart === agg.latestStart ? agg.earliestStart : `${agg.earliestStart} → ${agg.latestStart}`)
+      : '—';
+    const fixedNote = agg.fixedRateCount > 0
+      ? `<div class="text-amber-600 text-[11px] mt-1">${agg.fixedRateCount} of ${rtLabel} bill${agg.fixedRateCount === 1 ? 's' : ''} at a Fixed Rate - excluded from the Avg Billed Rate above.</div>`
+      : '';
+    body.innerHTML = `
+      <div class="font-semibold text-sm mb-1">${info.role}</div>
+      <div class="text-slate-300 mb-2">${rtLabel} · start dates ${startRange}</div>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+        <div>Avg RS Base Rate: <span class="font-medium">${agg.avgBaseRate != null ? '$' + agg.avgBaseRate.toFixed(2) : '—'}</span></div>
+        <div>Avg RS Current Rate: <span class="font-medium">${agg.avgCurrentRate != null ? '$' + agg.avgCurrentRate.toFixed(2) : '—'}</span></div>
+        <div>Avg Billed Rate: <span class="font-medium">${agg.avgPartnerRate != null ? '$' + agg.avgPartnerRate.toFixed(2) : '—'}</span></div>
+      </div>
+      ${fixedNote}
+      <div class="text-slate-400 mt-2 text-[11px]">Averaged across ${rtLabel} in this role. Switch to Hours &amp; Billing Detail for consolidated hours &amp; $.</div>
+    `;
+  } else {
+    const revenueCell = `<span class="font-medium text-green-400">$${agg.totalRevenue.toFixed(2)}</span>`;
+    const excludedCount = agg.fixedRateCount + agg.unavailableCount;
+    const excludedParts = [];
+    if (agg.fixedRateCount) excludedParts.push(`${agg.fixedRateCount} fixed-rate`);
+    if (agg.unavailableCount) excludedParts.push(`${agg.unavailableCount} rate-unavailable`);
+    const excludedNote = excludedCount > 0
+      ? `<div class="text-amber-600 text-[11px] mt-1">Est. Revenue excludes ${excludedParts.join(' + ')} RT${excludedCount === 1 ? '' : 's'} (of ${agg.rtCount} in this role).</div>`
+      : '';
+    body.innerHTML = `
+      <div class="font-semibold text-sm mb-1">${info.role}</div>
+      <div class="text-slate-300 mb-2">${rtLabel} combined</div>
+      <div class="text-slate-400 mb-1">Hours &amp; $ for ${dateFrom} → ${dateTo}${(dateFrom === FULL_MIN_DATE && dateTo === FULL_MAX_DATE) ? ' (full window)' : ''}:</div>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+        <div>Total Hours: <span class="font-medium">${agg.totalHours.toFixed(1)}</span></div>
+        <div>Overtime: <span class="font-medium text-amber-400">${agg.totalOT.toFixed(1)}</span></div>
+        <div>Est. Revenue: ${revenueCell}</div>
+        <div>Est. Cost: <span class="font-medium text-blue-300">$${agg.totalCost.toFixed(2)}</span></div>
+      </div>
+      ${excludedNote}
+      <div class="mt-1">Shifts: <span class="font-medium">${agg.totalWorkedShifts} worked</span> / <span class="font-medium ${agg.totalMissed > 0 ? 'text-red-400' : 'text-slate-300'}">${agg.totalMissed} missed</span> <span class="text-slate-400">(${agg.totalShifts} total${agg.totalShifts > 0 ? ', ' + Math.round(100 * agg.totalMissed / agg.totalShifts) + '% missed' : ''})</span></div>
+      <div class="text-slate-400 mt-2 text-[11px]">Consolidated (summed) across ${rtLabel} in this role - not averaged.</div>
+    `;
+  }
+
+  const tip = document.getElementById('rtTooltip');
+  tip.classList.remove('hidden');
+  positionTooltip();
+}
+
+function hideTooltip() {
+  document.getElementById('rtTooltip').classList.add('hidden');
+}
+
+let lastMouseX = 0, lastMouseY = 0;
+document.addEventListener('mousemove', (e) => {
+  lastMouseX = e.clientX; lastMouseY = e.clientY;
+  positionTooltip();
+});
+function positionTooltip() {
+  const tip = document.getElementById('rtTooltip');
+  if (tip.classList.contains('hidden')) return;
+  const pad = 16;
+  let x = lastMouseX + pad, y = lastMouseY + pad;
+  if (x + 350 > window.innerWidth) x = lastMouseX - 350 - pad;
+  if (y + 220 > window.innerHeight) y = lastMouseY - 220 - pad;
+  tip.style.left = Math.max(4, x) + 'px';
+  tip.style.top = Math.max(4, y) + 'px';
+}
+
+renderTreemap();
+</script>
+</body>
+</html>

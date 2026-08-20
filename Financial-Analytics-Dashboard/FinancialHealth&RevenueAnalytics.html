@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Financial & Revenue Analytics Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <style>
+        body { background-color: #f8fafc; }
+        .sortable-ghost { opacity: 0.4; background-color: #e2e8f0; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        .chart-container-sm { position: relative; height: 250px; width: 100%; }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen pb-12">
+
+    <!-- Navbar/Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col xl:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">Financial Health & Revenue Analytics</h1>
+            </div>
+            
+            <!-- Filters -->
+            <div class="flex flex-wrap justify-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <button onclick="filterReports('all')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-blue-600 transition-all" id="btn-all">All Reports</button>
+                <button onclick="filterReports('kpi')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800 transition-all" id="btn-kpi">KPIs</button>
+                <button onclick="filterReports('revenue')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800 transition-all" id="btn-revenue">Revenue</button>
+                <button onclick="filterReports('risk')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800 transition-all" id="btn-risk">AR / Risk</button>
+                <button onclick="filterReports('client')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-800 transition-all" id="btn-client">Clients</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        
+        <div class="mb-6 flex items-center justify-between">
+            <p class="text-sm text-slate-500 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                Drag and drop the card headers to customize your dashboard layout.
+            </p>
+        </div>
+
+        <!-- Sortable Grid Container -->
+        <div id="dashboard-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+
+            <!-- Report 1. KPI Scorecard (HTML/CSS) -->
+            <div class="report-card col-span-1 lg:col-span-2 xl:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden" data-category="kpi revenue risk">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100 transition-colors">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">1. Executive KPI Scorecard</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Row 1: Invoice Amount -->
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Total Invoice (Jun 2026)</p><p class="text-2xl font-bold text-slate-800 mt-1">$2,487,696</p></div>
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Total Invoice (Jul 2026)</p><p class="text-2xl font-bold text-slate-800 mt-1">$2,289,002</p></div>
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Total Invoice (MTD Aug 2026)</p><p class="text-2xl font-bold text-slate-800 mt-1">$65,888</p></div>
+                        
+                        <!-- Row 2: Cleared -->
+                        <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Cleared Invoices (Jun 2026)</p><p class="text-2xl font-bold text-green-700 mt-1">$2,436,190</p></div>
+                        <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Cleared Invoices (Jul 2026)</p><p class="text-2xl font-bold text-green-700 mt-1">$2,054,748</p></div>
+                        <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Cleared Invoices (MTD Aug 2026)</p><p class="text-2xl font-bold text-green-700 mt-1">$500</p></div>
+                        
+                        <!-- Row 3: Pending -->
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Pending Invoices (Jun 2026)</p><p class="text-2xl font-bold text-red-600 mt-1">$51,506</p></div>
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Pending Invoices (Jul 2026)</p><p class="text-2xl font-bold text-red-600 mt-1">$234,254</p></div>
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Pending Invoices (MTD Aug 2026)</p><p class="text-2xl font-bold text-red-600 mt-1">$65,388</p></div>
+                        
+                        <!-- Row 4: Revenue -->
+                        <div class="bg-orange-50 border border-orange-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Total Revenue (FY 2025)</p><p class="text-2xl font-bold text-orange-600 mt-1">$104,671</p></div>
+                        <div class="bg-orange-50 border border-orange-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Total Revenue (LYTD)</p><p class="text-2xl font-bold text-orange-600 mt-1">$0</p></div>
+                        <div class="bg-orange-50 border border-orange-100 rounded-lg p-4 text-center"><p class="text-xs text-slate-500 uppercase font-semibold">Total Revenue (CYTD Jan-Aug 2026)</p><p class="text-2xl font-bold text-orange-600 mt-1">$16,869,903</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report 2. Cleared vs Pending (Grouped Bar) -->
+            <div class="report-card col-span-1 lg:col-span-2 xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="revenue risk">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">2. Cleared vs. Pending Revenue by Payment Type</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart2"></canvas>
+                </div>
+            </div>
+
+            <!-- Report 3. Payment Method Trends (Line) -->
+            <div class="report-card col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="revenue">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">3. Total Revenue Trends by Payment Method</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart3"></canvas>
+                </div>
+            </div>
+
+            <!-- Report 4. Top 10 Clients Revenue Share (Stacked Bar) -->
+            <div class="report-card col-span-1 lg:col-span-1 xl:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="revenue client">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">4. Top 10 Clients Revenue Share (Qtrly)</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart4"></canvas>
+                </div>
+            </div>
+
+            <!-- Report 5. Industry Revenue Trends (Stacked Bar) -->
+            <div class="report-card col-span-1 lg:col-span-2 xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="revenue client">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">5. Revenue Trends by Business Industry</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart5"></canvas>
+                </div>
+            </div>
+
+            <!-- Report 6. Industry Clearance (Horizontal Bar) -->
+            <div class="report-card col-span-1 lg:col-span-2 xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="revenue risk">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">6. Industry Revenue & Clearance Rate (T12M)</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart6"></canvas>
+                </div>
+            </div>
+
+            <!-- Report 7. Risk Matrix (Bubble) -->
+            <div class="report-card col-span-1 lg:col-span-1 xl:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="risk client">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">7. Top Clients: Default Risk Matrix</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart7"></canvas>
+                </div>
+            </div>
+
+            <!-- Report 8. Health Segmentation (Mixed / 3 Panels) -->
+            <div class="report-card col-span-1 lg:col-span-2 xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="risk revenue client">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">8. Executive Financial Health Segmentation (T6M)</h2>
+                </div>
+                <div class="p-4 flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="chart-container-sm"><canvas id="chart8a"></canvas></div>
+                    <div class="chart-container-sm"><canvas id="chart8b"></canvas></div>
+                    <div class="chart-container-sm"><canvas id="chart8c"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Report 9. Company Size (Doughnut) -->
+            <div class="report-card col-span-1 lg:col-span-1 xl:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col" data-category="revenue client">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 drag-handle flex items-center gap-2 hover:bg-slate-100">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <h2 class="font-semibold text-slate-700">9. Revenue Concentration by Company Size</h2>
+                </div>
+                <div class="p-4 flex-grow chart-container">
+                    <canvas id="chart9"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- JavaScript logic -->
+    <script>
+        // Set standard Chart.js defaults
+        Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+
+        // 1. Initialize SortableJS
+        const grid = document.getElementById('dashboard-grid');
+        new Sortable(grid, {
+            handle: '.drag-handle',
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            easing: "cubic-bezier(1, 0, 0, 1)"
+        });
+
+        // 2. Dashboard Filtering Logic
+        function filterReports(category) {
+            const cards = document.querySelectorAll('.report-card');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            // Toggle button active states
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                btn.classList.add('text-slate-500');
+                if(btn.id === `btn-${category}`) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                    btn.classList.remove('text-slate-500');
+                }
+            });
+
+            // Filter logic
+            cards.forEach(card => {
+                const categories = card.getAttribute('data-category').split(' ');
+                if (category === 'all' || categories.includes(category)) {
+                    card.style.display = 'flex'; // maintain flex layout for charts
+                    if(card.classList.contains('col-span-3') && window.innerWidth >= 1280) {
+                        card.style.display = 'block'; // Block fixes grid-spanning issues for full rows
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // --- Render Charts ---
+
+        // Chart 2: Cleared vs Pending (Stacked Bar)
+        new Chart(document.getElementById('chart2').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Apr 26 - May 10', 'May 11 - May 25', 'May 26 - Jun 10', 'Jun 11 - Jun 25', 'Jun 26 - Jul 10', 'Jul 11 - Jul 25'],
+                datasets: [
+                    { label: 'Automated Cleared (NMI)', data: [712000, 752000, 833000, 759000, 741000, 652000], backgroundColor: '#22c55e', stack: 'Stack 0' },
+                    { label: 'Automated Pending (NMI)', data: [5000, 5000, 5000, 5000, 5000, 40000], backgroundColor: '#dc2626', stack: 'Stack 0' },
+                    { label: 'Manual Cleared (Invoice)', data: [315000, 334000, 361000, 341000, 311000, 200000], backgroundColor: '#16a34a', stack: 'Stack 1' },
+                    { label: 'Manual Pending (Invoice)', data: [5000, 10000, 33000, 8000, 47000, 136000], backgroundColor: '#b91c1c', stack: 'Stack 1' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { stacked: true, ticks: { maxRotation: 45, minRotation: 45 } },
+                    y: { stacked: true, ticks: { callback: value => '$' + (value/1000) + 'K' } }
+                }
+            }
+        });
+
+        // Chart 3: Trends by Payment Method (Line)
+        new Chart(document.getElementById('chart3').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Apr 26 - May 10', 'May 11 - May 25', 'May 26 - Jun 10', 'Jun 11 - Jun 25', 'Jun 26 - Jul 10', 'Jul 11 - Jul 25'],
+                datasets: [
+                    { label: 'NMI - ACH', data: [545000, 560000, 630000, 575000, 565000, 520000], borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.3, borderWidth: 2 },
+                    { label: 'Client Invoice', data: [320000, 345000, 395000, 350000, 355000, 335000], borderColor: '#0284c7', backgroundColor: '#0284c7', tension: 0.3, borderWidth: 2 },
+                    { label: 'NMI - Credit Card', data: [170000, 185000, 195000, 180000, 180000, 165000], borderColor: '#22c55e', backgroundColor: '#22c55e', tension: 0.3, borderWidth: 2 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+
+        // Chart 4: Top 10 Clients Revenue Share (Stacked Bar)
+        new Chart(document.getElementById('chart4').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['2025Q3', '2025Q4', '2026Q1', '2026Q2'],
+                datasets: [
+                    { label: 'Steadily Insurance', data: [0, 0, 250000, 260000], backgroundColor: '#fdba74' },
+                    { label: 'Sentry Management', data: [0, 0, 350000, 550000], backgroundColor: '#a5b4fc' },
+                    { label: 'Sentry Mgmt (Reporting)', data: [0, 0, 450000, 450000], backgroundColor: '#1d4ed8' },
+                    { label: 'RENOSY', data: [0, 0, 150000, 160000], backgroundColor: '#dc2626' },
+                    { label: 'Maymont Homes', data: [0, 0, 200000, 180000], backgroundColor: '#86efac' },
+                    { label: 'Goodwin & Company', data: [0, 0, 220000, 230000], backgroundColor: '#22c55e' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } },
+                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: value => '$' + (value/1000) + 'K' } } }
+            }
+        });
+
+        // Chart 5: Revenue Trends by Business Industry
+        new Chart(document.getElementById('chart5').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07'],
+                datasets: [
+                    { label: 'Property Mgmt', data: [1340000, 1310000, 1460000, 1370000, 1500000, 1410000], backgroundColor: '#22c55e' },
+                    { label: 'Other', data: [304000, 280000, 397000, 312000, 321000, 282000], backgroundColor: '#71717a' },
+                    { label: 'Service Providers', data: [221000, 197000, 225000, 204000, 212000, 191000], backgroundColor: '#0284c7' },
+                    { label: 'Real Estate Inv.', data: [168000, 149000, 156000, 134000, 145000, 128000], backgroundColor: '#f97316' },
+                    { label: 'Insurance', data: [112000, 102000, 103000, 91000, 105000, 86000], backgroundColor: '#dc2626' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } },
+                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: value => '$' + (value/1000000) + 'M' } } }
+            }
+        });
+
+        // Chart 6: Industry Clearance Rate (T12M)
+        new Chart(document.getElementById('chart6').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Property Mgmt', 'Service Providers', 'Other', 'Real Estate Inv.', 'Insurance', 'Dental', 'RE Agents', 'Healthcare', 'Financial', 'Tech/IT'],
+                datasets: [
+                    { label: 'Paid (Cleared)', data: [9800000, 2100000, 1900000, 1200000, 700000, 480000, 420000, 310000, 250000, 180000], backgroundColor: '#22c55e' },
+                    { label: 'Open AR (Risk)', data: [150000, 85000, 95000, 125000, 45000, 15000, 35000, 48000, 12000, 25000], backgroundColor: '#dc2626' }
+                ]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { x: { stacked: true, ticks: { callback: value => '$' + (value/1000000) + 'M' } }, y: { stacked: true } }
+            }
+        });
+
+        // Chart 7: Risk Matrix (Bubble)
+        const riskClients = ['Service Providers', 'Maymont Homes', 'RENOSY', 'Asset Mgmt', 'BizzyCar', 'Freestone', 'Frontsteps', 'Goodwin', 'Steadily', 'Sentry Mgmt'];
+        new Chart(document.getElementById('chart7').getContext('2d'), {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Client Default Risk',
+                    data: [
+                        {x: 35, y: 1, r: 8}, {x: 14, y: 2, r: 8}, {x: 92, y: 3, r: 8}, {x: 40, y: 4, r: 10}, {x: 12, y: 5, r: 10},
+                        {x: 39, y: 6, r: 12}, {x: 75, y: 7, r: 10}, {x: 25, y: 8, r: 10}, {x: 35, y: 9, r: 12}, {x: 20, y: 10, r: 15}
+                    ],
+                    backgroundColor: 'rgba(56, 189, 248, 0.8)', borderColor: '#0284c7'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { 
+                    x: { title: { display: true, text: 'Average Aging of Open Invoices (Days)' }, max: 150 },
+                    y: { ticks: { callback: value => riskClients[value-1] || '' }, max: 11, min: 0 }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Chart 8: Health Segmentation (3 Panels)
+        const hLabels = ['Feb-26', 'Mar-26', 'Apr-26', 'May-26', 'Jun-26', 'Jul-26'];
+        
+        // 8a: Low Health (Red Risk)
+        new Chart(document.getElementById('chart8a').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hLabels,
+                datasets: [
+                    { label: 'Total Revenue', type: 'bar', data: [55, 75, 87, 85, 80, 93], backgroundColor: '#5c967d', yAxisID: 'y' },
+                    { label: 'Pending AR', type: 'line', data: [15, 20, 25, 23, 24, 26], borderColor: '#b91c1c', backgroundColor: '#b91c1c', borderWidth: 2, yAxisID: 'y1' }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Red Risk (Low Health)' }, legend: {display: false} }, scales: { y: { display: true, max: 800 }, y1: { display: true, position: 'right', grid: {drawOnChartArea: false}, max: 1300} } }
+        });
+
+        // 8b: Medium Health (Amber Risk)
+        new Chart(document.getElementById('chart8b').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hLabels,
+                datasets: [
+                    { label: 'Total Revenue', type: 'bar', data: [420, 460, 520, 510, 510, 500], backgroundColor: '#5c967d', yAxisID: 'y' },
+                    { label: 'Pending AR', type: 'line', data: [1100, 2000, 3500, 2300, 2200, 2000], borderColor: '#b91c1c', backgroundColor: '#b91c1c', borderWidth: 2, yAxisID: 'y1' }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Amber Risk (Medium Health)' } }, scales: { y: { display: false, max: 800 }, y1: { display: true, position: 'right', grid: {drawOnChartArea: false}, max: 3500} } }
+        });
+
+        // 8c: High Health (Green Risk)
+        new Chart(document.getElementById('chart8c').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hLabels,
+                datasets: [
+                    { label: 'Total Revenue', type: 'bar', data: [398, 432, 455, 448, 435, 438], backgroundColor: '#5c967d', yAxisID: 'y' },
+                    { label: 'Pending AR', type: 'line', data: [100, 180, 210, 160, 140, 100], borderColor: '#b91c1c', backgroundColor: '#b91c1c', borderWidth: 2, yAxisID: 'y1' }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Green Risk (High Health)' }, legend: {display: false} }, scales: { y: { display: false, max: 500 }, y1: { display: true, position: 'right', grid: {drawOnChartArea: false}, max: 1100} } }
+        });
+
+        // Chart 9: Company Size
+        new Chart(document.getElementById('chart9').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['1-10', '11-50', '51-250', '251-1000', '1001-5000'],
+                datasets: [{
+                    data: [18.6, 22.4, 29.4, 19.0, 10.6],
+                    backgroundColor: ['#ff9f9f', '#ffb782', '#a3cbf7', '#96e6a1', '#cfbaff'],
+                    borderWidth: 2
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+    </script>
+</body>
+</html>
