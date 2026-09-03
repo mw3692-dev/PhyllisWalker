@@ -1,6 +1,6 @@
 # phylliswalker-replica
 
-Static marketing site for Phyllis Walker J. Hilburn Stylist Studio, published via GitHub Pages at https://mw3692-dev.github.io/PhyllisWalker/. Includes the Privacy Policy and SMS Text Message Program pages used for A2P 10DLC registration.
+Static replica of the Phyllis Walker J.Hilburn landing page for demo and consultation.
 
 This workspace copy includes local placeholder images (SVG) so the site can be previewed offline.
 
