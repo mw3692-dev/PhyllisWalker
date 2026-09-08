@@ -1,12 +1,24 @@
-Placeholder photography — Unsplash License (free for commercial use, no attribution
-required; credit given here as courtesy). These are TEMPORARY stand-ins and should be
-replaced with Phyllis's own photography of her work and the studio at The Star.
+IMAGE SOURCES
 
-suit-three-piece.jpg  unsplash.com/photos/photo-1594938298603-c8148c4dae35
-dinner-jacket.jpg     unsplash.com/photos/photo-1598808503746-f34c53b9323e
-shirt-and-tie.jpg     unsplash.com/photos/photo-1620012253295-c15cc3e65df4
-denim-jacket.jpg      unsplash.com/photos/photo-1611312449408-fcece27cdbb7
-overcoat.jpg          unsplash.com/photos/photo-1553143820-6bb68bc34679
+assets/jh/ — J.Hilburn brand campaign photography, supplied by Mark from the PWJH
+Google Drive folder. Used for the hero, the lookbook and the craft/detail sections.
+  editorial-sportcoat.jpg   blue check sport coat, seated (hero; unbranded)
+  sportcoat-polo.jpg        sport coat over knit polo
+  tweed-knitwear.jpg        tweed sport coat with knitwear
+  outerwear.jpg             field jacket, outdoors
+  sleeve-detail.jpg         working cuff buttons and cloth
 
-NOT used: any photography from jhbridgepark.com. Those images are credited to seven
-named photographers and depict another stylist's clients.
+assets/phyllis-headshot.jpg — Phyllis's own profile picture, taken from her connected
+social account in the CRM. Only 206x206 exists, so it is shown as a circular headshot at
+native size. Replace with a proper studio portrait when one is taken.
+
+assets/stock/ — Unsplash License (free for commercial use). TEMPORARY stand-ins for the
+three slots the J.Hilburn set does not cover: black tie, a three-piece, and off-duty.
+  dinner-jacket.jpg     unsplash.com/photos/photo-1598808503746-f34c53b9323e
+  suit-three-piece.jpg  unsplash.com/photos/photo-1594938298603-c8148c4dae35
+  denim-jacket.jpg      unsplash.com/photos/photo-1611312449408-fcece27cdbb7
+
+NOT USED
+  Any photography from jhbridgepark.com — credited to seven named photographers and
+  showing another stylist's clients.
+  IMG_1470.jpg from the PWJH folder — a personal group photograph, not brand imagery.
