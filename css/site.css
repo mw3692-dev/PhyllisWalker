@@ -1,0 +1,117 @@
+:root{
+  --ink:#151719; --paper:#FFFFFF; --sand:#F5F2ED; --band:#FAF8F5;
+  --muted:#6B6560; --rule:#E4DED5; --accent:#1D2B36; --gold:#9A7B4F;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Jost,-apple-system,Segoe UI,Helvetica,Arial,sans-serif;
+  font-weight:300;font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+a{color:inherit}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:16px;top:16px;background:#fff;padding:10px 16px;z-index:99}
+
+h1,h2,h3,h4{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;letter-spacing:.01em;
+  margin:0;text-wrap:balance}
+h1{font-size:clamp(40px,6.2vw,68px);line-height:1.06}
+h1 em{font-style:italic;color:var(--gold)}
+h2{font-size:clamp(30px,4vw,44px);line-height:1.14;margin-bottom:14px}
+h3{font-size:21px;margin-bottom:6px}
+h4{font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-family:Jost,sans-serif;
+  font-weight:500;margin-bottom:12px}
+p{margin:0 0 16px}
+.eyebrow{font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);
+  margin:0 0 14px;font-weight:400}
+.eyebrow.light{color:#C9B48F}
+.lede,.intro{font-size:19px;color:var(--muted);max-width:60ch}
+.intro{margin-bottom:34px}
+.pull{font-size:19px;max-width:78ch;margin:34px auto 0;text-align:center;color:var(--muted)}
+
+.nav{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.94);
+  backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid var(--rule)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:16px 0}
+.brand{text-decoration:none;display:flex;flex-direction:column;gap:2px}
+.brand-mark{font-family:Jost,sans-serif;font-weight:500;letter-spacing:.3em;font-size:15px}
+.brand-sub{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.links{display:flex;gap:26px}
+.links a{text-decoration:none;font-size:14px;letter-spacing:.03em;color:var(--muted)}
+.links a:hover{color:var(--ink)}
+.nav-cta{display:flex;align-items:center;gap:16px}
+.tel{text-decoration:none;font-size:14px;color:var(--muted);white-space:nowrap}
+
+.btn{display:inline-block;text-decoration:none;font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;padding:14px 26px;border:1px solid var(--ink);white-space:nowrap}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-dark:hover{background:var(--accent);border-color:var(--accent)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--sand)}
+.btn-light{background:#fff;color:var(--ink);border-color:#fff}
+.row{display:flex;gap:14px;flex-wrap:wrap;margin:28px 0 0}
+
+.hero{border-bottom:1px solid var(--rule);background:var(--band)}
+.hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;
+  padding:84px 28px 84px}
+.marks{list-style:none;display:flex;gap:28px;flex-wrap:wrap;padding:0;margin:36px 0 0}
+.marks li{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  padding-left:18px;position:relative}
+.marks li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:1px;background:var(--gold)}
+
+.band{padding:88px 0;border-bottom:1px solid var(--rule)}
+.band.alt{background:var(--band)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:8px}
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-top:8px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.role{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:-6px 0 18px}
+.social{display:flex;gap:22px;margin-top:22px}
+.social a{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:34px}
+.steps li{border-top:1px solid var(--ink);padding-top:18px}
+.steps span{display:block;font-size:11.5px;letter-spacing:.2em;color:var(--gold);margin-bottom:10px}
+.steps p{font-size:15.5px;color:var(--muted)}
+
+.facts{margin:26px 0 0}
+.facts dt{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:18px}
+.facts dd{margin:5px 0 0;color:var(--muted)}
+.facts a{color:var(--muted)}
+
+.ph{margin:0;background:var(--sand);border:1px solid var(--rule);aspect-ratio:3/4;
+  display:grid;place-items:center;overflow:hidden}
+.ph-in{text-align:center;padding:20px}
+.ph-in span{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.ph-in em{display:block;font-size:11.5px;font-style:normal;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);margin-top:8px}
+.hero-ph{aspect-ratio:4/5}
+.portrait-ph{aspect-ratio:4/5}
+.three .ph{aspect-ratio:4/3;margin-bottom:18px}
+
+.cta{padding:96px 0;background:var(--accent);color:#fff;text-align:center}
+.cta .intro{color:#C8CDD2;margin-left:auto;margin-right:auto}
+.cta h2{color:#fff}
+
+.foot{background:var(--ink);color:#B7B2AC;padding:64px 0 0;font-size:14px}
+.foot-in{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding-bottom:44px}
+.foot h4{color:#fff}
+.foot .brand-mark{color:#fff;margin-bottom:14px}
+.foot a{color:#B7B2AC;text-decoration:none}
+.foot a:hover{color:#fff;text-decoration:underline}
+.small{font-size:13.5px;line-height:1.9;margin:0}
+.foot-legal{border-top:1px solid #2A2C2E;padding:20px 28px 34px}
+.foot-legal .small{font-size:12.5px;color:#7E7A75}
+
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media (max-width:960px){
+  .links{display:none}
+  .hero-in,.split{grid-template-columns:1fr;gap:36px;padding-top:56px;padding-bottom:56px}
+  .three,.four,.steps{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:1fr 1fr}
+  .foot-in{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){
+  .three,.four,.steps,.grid,.foot-in{grid-template-columns:1fr}
+  .band{padding:60px 0}
+}
