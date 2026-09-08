@@ -25,19 +25,6 @@
 </script>
 </head>
 <body>
-  <script>
-  (function(){
-    try{
-      var ua = navigator.userAgent || '';
-      var botPatterns = /bot|crawl|slurp|spider|bingpreview|facebookexternalhit|googlebot|mediapartners-google|adsbot/i;
-      if(botPatterns.test(ua)) return; // allow most bots to index content
-      // For human visitors, present a redirect notice and forward to the official site
-      var official = 'https://phylliswalker.jhilburn.com/';
-      document.documentElement.innerHTML = '\n        <body style="font-family:system-ui,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">\n          <div style="text-align:center;max-width:560px;padding:20px;">\n            <h2>You are being redirected</h2>\n            <p>This site is a technical replica used for indexing. Please visit the official public site for Phyllis Walker.</p>\n            <p><a href="'+official+'">Open phylliswalker.jhilburn.com</a></p>\n          </div>\n        </body>\n      ';
-      setTimeout(function(){ window.location.href = official; }, 1200);
-    } catch(e){}
-  })();
-  </script>
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="nav">
@@ -75,7 +62,7 @@
           <li>Personal Stylist</li><li>Premium Fabric</li><li>100% Guaranteed</li>
         </ul>
       </div>
-      <figure class="ph hero-ph"><div class="ph-in"><span>Hero — a client in a finished suit</span><em>Photograph to come</em></div></figure>
+      <figure class="ph hero-ph"><img src="assets/stock/suit-three-piece.jpg" alt="Three-piece windowpane suit" loading="lazy" decoding="async"><figcaption>Hero — a client in a finished suit</figcaption></figure>
     </div>
   </section>
 
@@ -102,7 +89,7 @@
 
   <section id="stylist" class="band alt">
     <div class="wrap split">
-      <figure class="ph portrait-ph"><div class="ph-in"><span>Portrait of Phyllis</span><em>Photograph to come</em></div></figure>
+      <figure class="ph portrait-ph"><img src="assets/stock/shirt-and-tie.jpg" alt="Business styling" loading="lazy" decoding="async"><figcaption>Portrait of Phyllis</figcaption></figure>
       <div>
         <p class="eyebrow">Meet Your Stylist</p>
         <h2>Phyllis Walker</h2>
@@ -125,9 +112,9 @@
       <h2>Made just for him.</h2>
       <p class="intro">Custom-made to fit his body, his personality, and his lifestyle.</p>
       <div class="grid">
-        <figure class="ph "><div class="ph-in"><span>The Dinner Jacket</span><em>Photograph to come</em></div></figure><figure class="ph "><div class="ph-in"><span>The Frisco Studio</span><em>Photograph to come</em></div></figure><figure class="ph "><div class="ph-in"><span>Sport Coat, Off Duty</span><em>Photograph to come</em></div></figure>
-        <figure class="ph "><div class="ph-in"><span>Custom Polos</span><em>Photograph to come</em></div></figure><figure class="ph "><div class="ph-in"><span>On the Floor</span><em>Photograph to come</em></div></figure><figure class="ph "><div class="ph-in"><span>Made Personal</span><em>Photograph to come</em></div></figure>
-        <figure class="ph "><div class="ph-in"><span>Monogrammed Details</span><em>Photograph to come</em></div></figure><figure class="ph "><div class="ph-in"><span>Wedding Ready</span><em>Photograph to come</em></div></figure>
+        <figure class="ph "><img src="assets/stock/dinner-jacket.jpg" alt="A dinner jacket" loading="lazy" decoding="async"><figcaption>The Dinner Jacket</figcaption></figure><figure class="ph "><img src="assets/stock/suit-three-piece.jpg" alt="In the studio" loading="lazy" decoding="async"><figcaption>The Frisco Studio</figcaption></figure><figure class="ph "><img src="assets/stock/overcoat.jpg" alt="Sport coat, off duty" loading="lazy" decoding="async"><figcaption>Sport Coat, Off Duty</figcaption></figure>
+        <figure class="ph "><img src="assets/stock/shirt-and-tie.jpg" alt="Custom shirting" loading="lazy" decoding="async"><figcaption>Custom Polos</figcaption></figure><figure class="ph "><img src="assets/stock/dinner-jacket.jpg" alt="On the floor" loading="lazy" decoding="async"><figcaption>On the Floor</figcaption></figure><figure class="ph "><img src="assets/stock/denim-jacket.jpg" alt="Made personal" loading="lazy" decoding="async"><figcaption>Made Personal</figcaption></figure>
+        <figure class="ph "><img src="assets/stock/suit-three-piece.jpg" alt="Monogrammed details" loading="lazy" decoding="async"><figcaption>Monogrammed Details</figcaption></figure><figure class="ph "><img src="assets/stock/dinner-jacket.jpg" alt="Wedding ready" loading="lazy" decoding="async"><figcaption>Wedding Ready</figcaption></figure>
       </div>
     </div>
   </section>
@@ -170,11 +157,11 @@
       <h2>Proof in every detail.</h2>
       <p class="intro">See the craftsmanship up close: the finishing, the fabric, the construction.</p>
       <div class="three">
-        <div><figure class="ph "><div class="ph-in"><span>Hand-finished monograms</span><em>Photograph to come</em></div></figure><h3>Hand-finished monograms</h3><p>Your initials, quietly
+        <div><figure class="ph "><img src="assets/stock/shirt-and-tie.jpg" alt="Hand-finished monograms" loading="lazy" decoding="async"><figcaption>Hand-finished monograms</figcaption></figure><h3>Hand-finished monograms</h3><p>Your initials, quietly
         yours, on cuffs, collars, and more.</p></div>
-        <div><figure class="ph "><div class="ph-in"><span>Fabric from the finest mills</span><em>Photograph to come</em></div></figure><h3>Fabric from the finest mills</h3><p>Patterns
+        <div><figure class="ph "><img src="assets/stock/suit-three-piece.jpg" alt="Fabric from the finest mills" loading="lazy" decoding="async"><figcaption>Fabric from the finest mills</figcaption></figure><h3>Fabric from the finest mills</h3><p>Patterns
         precisely cut and matched, in fabrics chosen with you.</p></div>
-        <div><figure class="ph "><div class="ph-in"><span>Considered construction</span><em>Photograph to come</em></div></figure><h3>Considered construction</h3><p>Every seam, button and
+        <div><figure class="ph "><img src="assets/stock/denim-jacket.jpg" alt="Considered construction" loading="lazy" decoding="async"><figcaption>Considered construction</figcaption></figure><h3>Considered construction</h3><p>Every seam, button and
         lapel, finished to last.</p></div>
       </div>
     </div>
@@ -194,7 +181,7 @@
           <dt>Studio Hours</dt><dd>Wednesday to Friday, 11AM &ndash; 5PM<br>Other days by appointment</dd>
         </dl>
       </div>
-      <figure class="ph portrait-ph"><div class="ph-in"><span>The studio at The Star</span><em>Photograph to come</em></div></figure>
+      <figure class="ph portrait-ph"><img src="assets/stock/dinner-jacket.jpg" alt="The studio at The Star" loading="lazy" decoding="async"><figcaption>The studio at The Star</figcaption></figure>
     </div>
   </section>
 
