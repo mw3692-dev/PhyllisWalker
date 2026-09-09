@@ -1,0 +1,32 @@
+IMAGE SOURCES — every photograph on the site is J.Hilburn brand material.
+
+assets/jh/  — J.Hilburn campaign and product photography, supplied from the PWJH
+Google Drive folder.
+  editorial-sportcoat.jpg  blue check sport coat, seated  (HERO — the only frame
+                           without the CUSTOM-MADE lockup, so it works as a header)
+  sportcoat-polo.jpg       sport coat over a knit polo
+  tweed-knitwear.jpg       tweed sport coat with knitwear
+  outerwear.jpg            field jacket, outdoors
+  knit-portrait.jpg        mock-neck knit and cap
+  knit-layering.jpg        mock neck over a checked shirt, close up
+  monogram-rail.jpg        knit polos on the rail with monogrammed tags
+  polo-rail.jpg            long-sleeve polos on the rail
+  polo-detail.jpg          twin-pocket knit polo, close up
+  sleeve-detail.jpg        working cuff buttons and cloth
+
+assets/phyllis-headshot.jpg — Phyllis's own profile picture from her connected
+social account. Only 206x206 exists, so it is shown as a circular headshot at
+native size. Replace with a studio portrait when one is taken.
+
+NO LONGER USED
+  Unsplash stand-ins — all three deleted now that the J.Hilburn set covers the site.
+  Any photography from jhbridgepark.com — credited to seven named photographers,
+  showing another stylist's clients.
+  IMG_1470.jpg and JHimage_5.JPG from the PWJH folder — a personal group photograph
+  and a very low-resolution file respectively.
+
+GAP WORTH FILLING
+  The set is strong on knitwear, sport coats and outerwear, and has nothing at the
+  formal end. The page copy promises "Business to Social to Casual", but there is no
+  suit, no shirt-and-tie and no black tie image. Those are the assets to ask J.Hilburn
+  for next.
