@@ -6,22 +6,31 @@ lockup burned into the lower third; that is how you tell a genuine brand frame
 from a stray file.
 
 RULE: no photograph is used twice on the page. Mark asked for this directly on
-2026-09-11. There are nine usable frames and the page has eight image slots, so
-the allocation below is exact -- if you add a slot, you must add a photo.
+2026-09-11. Ten usable frames against eight image slots, so two sit in reserve --
+if you add a slot, take from the reserve rather than repeating a frame.
 
-  tweed-knitwear.jpg       HERO. Tweed sport coat over navy knit, interior.
-                           Native 4:5, which matches .hero-ph exactly.
+Note groom-tuxedo.jpg is the exception to the lockup test above: it is Phyllis's
+own client photograph, so it carries no J.Hilburn lockup and is still genuine.
+
+  groom-tuxedo.jpg         HERO. A groom in a custom black tuxedo, dressed by
+                           Phyllis -- her own client work, not brand stock, and
+                           the only such frame on the site. Supplied by Mark
+                           2026-09-11. Cropped 1152x1365 -> 900x1125 for the 4:5
+                           hero slot; the crop takes width off the sides rather
+                           than height, because cutting the shoes off a
+                           full-length black-tie shot defeats the photograph.
+  tweed-knitwear.jpg       Lookbook -- "Tweed & Knitwear"
   knit-portrait.jpg        Lookbook -- "Knitwear, Off Duty"
   sportcoat-polo.jpg       Lookbook -- "Sport Coat & Polo"
   outerwear.jpg            Lookbook -- "Outerwear"
-  polo-rail.jpg            Lookbook -- "The Long-Sleeve Polo"
   monogram-rail.jpg        Craft & Detail -- "Hand-finished monograms"
   polo-detail.jpg          Craft & Detail -- "Fabric from the finest mills"
   sleeve-detail.jpg        Craft & Detail -- "Considered construction"
+  polo-rail.jpg            HELD IN RESERVE. Long-sleeve polos on the rail.
   knit-layering.jpg        HELD IN RESERVE. Mock neck over a checked shirt.
-                           Unused only because the lookbook grid is four columns
-                           and a fifth frame would orphan a row. First candidate
-                           when the lookbook expands.
+
+  Both are unused only because the lookbook grid is four columns and a fifth
+  frame would orphan a row. They are the first candidates when it expands.
 
   The lookbook was eight frames until 2026-09-11 and is now four, because four
   of the eight were repeats of images used elsewhere on the page. More custom
@@ -63,8 +72,12 @@ NO LONGER USED
   and a very low-resolution file respectively.
 
 GAP WORTH FILLING
-  The set is strong on knitwear, sport coats and outerwear, and thin at the formal
-  end. The page copy promises "Business to Social to Casual". The new portrait adds
-  a navy sport coat on the form, but there is still no suit worn, no shirt-and-tie
-  and no black tie image. Those are the assets to ask J.Hilburn for next -- along
-  with the un-watermarked original of Phyllis's portrait.
+  Black tie is now covered, and by the best kind of image: real client work.
+  What is still missing from "Business to Social to Casual" is the business end --
+  a suit worn with a shirt and tie. Ask J.Hilburn for that, and ask Phyllis for
+  the un-watermarked original of her own portrait.
+
+  If more of Phyllis's client photography exists, it should displace brand stock
+  wherever the two compete. Every other J.Hilburn stylist site draws on the same
+  corporate library; her own work is the only thing on this page that cannot be
+  found on all of them.
