@@ -37,17 +37,16 @@ own client photograph, so it carries no J.Hilburn lockup and is still genuine.
   photography is coming; widen the lookbook back out when it lands.
 
 assets/phyllis-portrait.jpg  — Phyllis in her studio, tape measure around her neck,
-assets/phyllis-studio.jpg      a navy sport coat on the form beside her. Supplied by
-                               Mark 2026-09-11. Both are crops of one screenshot
-                               (734x906), so resolution is modest: the square is the
-                               circular portrait in "Meet Your Stylist", the wide one
-                               is the og:image for link previews.
+assets/phyllis-studio.jpg      a blue suit on the dress form beside her. Clean
+                               original supplied by Mark 2026-09-11, 1115x1411.
+                               portrait: 900x1125, native 4:5, fills the stylist
+                               column full-bleed with no crop.
+                               studio:   1200x629, ~1.91:1 for og:image.
 
-  IMPORTANT — the source image carries a burned-in template watermark reading
-  "#NATURE #ORGANIC #INSPIRATION / [013] VOL.01" across the centre, beginning at
-  y=362. Both crops stop above that line, which is why they are head-and-shoulders
-  only and cannot be extended downward. Get the un-watermarked original from
-  Phyllis and re-crop for a fuller portrait.
+  Superseded a watermarked screenshot of the same shoot. That earlier file had
+  "#NATURE #ORGANIC #INSPIRATION / [013] VOL.01" burned across the centre from
+  y=362 down, which forced a head-and-shoulders crop. The clean original removed
+  that constraint -- hence the full portrait and the end of the circular avatar.
 
 assets/storefront.jpg — the J.Hilburn Stylist Studio shopfront at The Star,
 supplied by Mark 2026-09-11. Clean, no watermark, 1400x764. Used in the Visit
@@ -74,8 +73,8 @@ NO LONGER USED
 GAP WORTH FILLING
   Black tie is now covered, and by the best kind of image: real client work.
   What is still missing from "Business to Social to Casual" is the business end --
-  a suit worn with a shirt and tie. Ask J.Hilburn for that, and ask Phyllis for
-  the un-watermarked original of her own portrait.
+  a suit worn with a shirt and tie. There is a suit on the dress form in Phyllis's
+  portrait, but none worn. Ask J.Hilburn for that.
 
   If more of Phyllis's client photography exists, it should displace brand stock
   wherever the two compete. Every other J.Hilburn stylist site draws on the same
