@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mw3692-dev.github.io/PhyllisWalker/sitemap.xml
+Sitemap: https://jhilburnfrisco.thestar.biz/sitemap.xml
