@@ -14,9 +14,27 @@ Google Drive folder.
   polo-detail.jpg          twin-pocket knit polo, close up
   sleeve-detail.jpg        working cuff buttons and cloth
 
-assets/phyllis-headshot.jpg — Phyllis's own profile picture from her connected
-social account. Only 206x206 exists, so it is shown as a circular headshot at
-native size. Replace with a studio portrait when one is taken.
+assets/phyllis-portrait.jpg  — Phyllis in her studio, tape measure around her neck,
+assets/phyllis-studio.jpg      a navy sport coat on the form beside her. Supplied by
+                               Mark 2026-09-11. Both are crops of one screenshot
+                               (734x906), so resolution is modest: the square is the
+                               circular portrait in "Meet Your Stylist", the wide one
+                               is the og:image for link previews.
+
+  IMPORTANT — the source image carries a burned-in template watermark reading
+  "#NATURE #ORGANIC #INSPIRATION / [013] VOL.01" across the centre, beginning at
+  y=362. Both crops stop above that line, which is why they are head-and-shoulders
+  only and cannot be extended downward. Get the un-watermarked original from
+  Phyllis and re-crop for a fuller portrait.
+
+assets/storefront.jpg — the J.Hilburn Stylist Studio shopfront at The Star,
+supplied by Mark 2026-09-11. Clean, no watermark, 1400x764. Used in the Visit
+section. Note the studio is shared with other J.Hilburn stylists, so the caption
+and surrounding copy point the reader to Phyllis specifically rather than to the
+store in general.
+
+assets/phyllis-headshot.jpg — REMOVED. Was Phyllis's 206x206 social profile
+picture, superseded by the portrait above.
 
 NO LONGER USED
   Unsplash stand-ins — all three deleted now that the J.Hilburn set covers the site.
@@ -26,7 +44,8 @@ NO LONGER USED
   and a very low-resolution file respectively.
 
 GAP WORTH FILLING
-  The set is strong on knitwear, sport coats and outerwear, and has nothing at the
-  formal end. The page copy promises "Business to Social to Casual", but there is no
-  suit, no shirt-and-tie and no black tie image. Those are the assets to ask J.Hilburn
-  for next.
+  The set is strong on knitwear, sport coats and outerwear, and thin at the formal
+  end. The page copy promises "Business to Social to Casual". The new portrait adds
+  a navy sport coat on the form, but there is still no suit worn, no shirt-and-tie
+  and no black tie image. Those are the assets to ask J.Hilburn for next -- along
+  with the un-watermarked original of Phyllis's portrait.
