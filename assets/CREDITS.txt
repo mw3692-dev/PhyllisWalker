@@ -1,18 +1,31 @@
 IMAGE SOURCES — every photograph on the site is J.Hilburn brand material.
 
-assets/jh/  — J.Hilburn campaign and product photography, supplied from the PWJH
-Google Drive folder.
-  editorial-sportcoat.jpg  blue check sport coat, seated  (HERO — the only frame
-                           without the CUSTOM-MADE lockup, so it works as a header)
-  sportcoat-polo.jpg       sport coat over a knit polo
-  tweed-knitwear.jpg       tweed sport coat with knitwear
-  outerwear.jpg            field jacket, outdoors
-  knit-portrait.jpg        mock-neck knit and cap
-  knit-layering.jpg        mock neck over a checked shirt, close up
-  monogram-rail.jpg        knit polos on the rail with monogrammed tags
-  polo-rail.jpg            long-sleeve polos on the rail
-  polo-detail.jpg          twin-pocket knit polo, close up
-  sleeve-detail.jpg        working cuff buttons and cloth
+assets/jh/ — J.Hilburn campaign and product photography, supplied from the PWJH
+Google Drive folder. Every one of these carries the "J.HILBURN CUSTOM-MADE"
+lockup burned into the lower third; that is how you tell a genuine brand frame
+from a stray file.
+
+RULE: no photograph is used twice on the page. Mark asked for this directly on
+2026-09-11. There are nine usable frames and the page has eight image slots, so
+the allocation below is exact -- if you add a slot, you must add a photo.
+
+  tweed-knitwear.jpg       HERO. Tweed sport coat over navy knit, interior.
+                           Native 4:5, which matches .hero-ph exactly.
+  knit-portrait.jpg        Lookbook -- "Knitwear, Off Duty"
+  sportcoat-polo.jpg       Lookbook -- "Sport Coat & Polo"
+  outerwear.jpg            Lookbook -- "Outerwear"
+  polo-rail.jpg            Lookbook -- "The Long-Sleeve Polo"
+  monogram-rail.jpg        Craft & Detail -- "Hand-finished monograms"
+  polo-detail.jpg          Craft & Detail -- "Fabric from the finest mills"
+  sleeve-detail.jpg        Craft & Detail -- "Considered construction"
+  knit-layering.jpg        HELD IN RESERVE. Mock neck over a checked shirt.
+                           Unused only because the lookbook grid is four columns
+                           and a fifth frame would orphan a row. First candidate
+                           when the lookbook expands.
+
+  The lookbook was eight frames until 2026-09-11 and is now four, because four
+  of the eight were repeats of images used elsewhere on the page. More custom
+  photography is coming; widen the lookbook back out when it lands.
 
 assets/phyllis-portrait.jpg  — Phyllis in her studio, tape measure around her neck,
 assets/phyllis-studio.jpg      a navy sport coat on the form beside her. Supplied by
@@ -38,6 +51,11 @@ assets/phyllis-headshot.jpg — REMOVED. Was Phyllis's 206x206 social profile
 picture, superseded by the portrait above.
 
 NO LONGER USED
+  editorial-sportcoat.jpg — DELETED 2026-09-11. Man in a blue check suit on an
+  ornate sofa. It was the site hero, and it is not J.Hilburn photography: it is
+  the only frame in the folder with no CUSTOM-MADE lockup, which should have been
+  the tell. Its caption also read "Hero — a client in a finished suit", which was
+  both a leftover staging label and an untrue claim about a stock model.
   Unsplash stand-ins — all three deleted now that the J.Hilburn set covers the site.
   Any photography from jhbridgepark.com — credited to seven named photographers,
   showing another stylist's clients.
