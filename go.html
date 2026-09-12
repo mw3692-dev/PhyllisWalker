@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Opening your booking page…</title>
+<meta name="robots" content="noindex,nofollow">
+<!--
+  TRACKING BOUNCE.
+
+  Why this page exists: the booking form itself lives on GHL's domain, which we
+  cannot add analytics to. So a link that goes straight from an email or a social
+  post to the booking widget is completely invisible to Google Analytics — the
+  click, the campaign it came from, and which appointment type was chosen are all
+  lost at the domain boundary.
+
+  Sending those links here instead keeps the visitor one click from the calendar
+  while making the click measurable. This page records the event, then forwards
+  straight on. It is a redirect, not a destination: noindex, no chrome, and if
+  JavaScript is unavailable the <noscript> refresh below still gets them there.
+
+  USAGE
+    go.html?to=new       -> New Client Appointment  (60 min)
+    go.html?to=studio    -> Studio Appointment      (45 min)
+    go.html?to=delivery  -> Delivery / Pick Up      (30 min)
+    go.html              -> the booking page listing all three
+
+  Append the usual utm_* parameters and they are both recorded here and passed
+  through to GHL, so attribution survives the hop:
+    go.html?to=new&utm_source=email&utm_medium=campaign&utm_campaign=fall-2026
+-->
+<style>
+  :root{color-scheme:light dark}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;
+    background:#FAF8F5;color:#151719;
+    font:300 16px/1.6 Jost,-apple-system,Segoe UI,Helvetica,Arial,sans-serif}
+  @media (prefers-color-scheme:dark){body{background:#131416;color:#EDE9E3}}
+  .box{text-align:center;padding:32px}
+  .box p{margin:0 0 14px;color:#6B6560}
+  @media (prefers-color-scheme:dark){.box p{color:#A29C95}}
+  a{color:inherit}
+</style>
+<script src="js/analytics.js" defer></script>
+</head>
+<body>
+  <div class="box">
+    <p>Opening your booking page&hellip;</p>
+    <p><a id="fallback" href="booking.html">Continue</a></p>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TARGETS = {
+    "new":      { url: "https://api.leadconnectorhq.com/widget/booking/1r7RfVTwjUwOi7jjnGLh",
+                  name: "new-client", minutes: 60 },
+    "studio":   { url: "https://api.leadconnectorhq.com/widget/booking/swgPCbWxHMigGhBMIDqN",
+                  name: "studio-appointment", minutes: 45 },
+    "delivery": { url: "https://api.leadconnectorhq.com/widget/booking/VGdTa2UbJAAd7Xv4FQkZ",
+                  name: "delivery-pickup", minutes: 30 }
+  };
+
+  var params, to, target, dest;
+  try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
+  to = params ? (params.get("to") || "").toLowerCase() : "";
+  target = TARGETS[to] || null;
+  dest = target ? target.url : "booking.html";
+
+  // Carry utm_* through to the destination so the campaign is not lost on GHL's side.
+  if (params && target) {
+    try {
+      var u = new URL(dest);
+      params.forEach(function (v, k) {
+        if (k.toLowerCase().indexOf("utm_") === 0) u.searchParams.set(k, v);
+      });
+      dest = u.toString();
+    } catch (e) { /* keep the plain destination */ }
+  }
+
+  document.getElementById("fallback").setAttribute("href", dest);
+
+  function leave() { location.replace(dest); }
+
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "book_click", {
+      appointment_type: target ? target.name : "booking-page",
+      duration_minutes: target ? target.minutes : 0,
+      via: "tracking-bounce"
+    });
+    // Give the beacon a moment, but never hold the visitor up.
+    setTimeout(leave, 300);
+  } else {
+    // Analytics off, or Do Not Track. Nothing to record; go straight there.
+    setTimeout(leave, 60);
+  }
+})();
+</script>
+<noscript><meta http-equiv="refresh" content="0;url=booking.html"></noscript>
+</body>
+</html>
