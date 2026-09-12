@@ -29,9 +29,10 @@ assets/phyllis-studio.jpg      a navy sport coat on the form beside her. Supplie
 
 assets/storefront.jpg — the J.Hilburn Stylist Studio shopfront at The Star,
 supplied by Mark 2026-09-11. Clean, no watermark, 1400x764. Used in the Visit
-section. Note the studio is shared with other J.Hilburn stylists, so the caption
-and surrounding copy point the reader to Phyllis specifically rather than to the
-store in general.
+section. Note the studio is shared with one other J.Hilburn stylist, so the
+caption and surrounding copy point the reader to Phyllis specifically rather
+than to the store in general. Do not state a stylist count in the copy -- it
+changes, and the point is only that clients should book with Phyllis by name.
 
 assets/phyllis-headshot.jpg — REMOVED. Was Phyllis's 206x206 social profile
 picture, superseded by the portrait above.
