@@ -4,7 +4,7 @@
  * TO SWITCH THIS ON: paste the Measurement ID on the next line. Nothing else.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-var GA_MEASUREMENT_ID = ""; // e.g. "G-ABCD123456"
+var GA_MEASUREMENT_ID = "G-WZ3GED0EDR"; // e.g. "G-ABCD123456"
 
 /* Until that ID is filled in, this file does nothing at all: no script is
  * fetched, no cookie is set, and the privacy policy stays accurate. That is
